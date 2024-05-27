@@ -1,12 +1,12 @@
 package login
 
 import (
-	"github.com/caddy-plugins/loginsrv/model"
-	. "github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/caddy-plugins/loginsrv/model"
+	. "github.com/stretchr/testify/assert"
 )
 
 func Test_form(t *testing.T) {
@@ -88,7 +88,7 @@ func Test_form_executeError(t *testing.T) {
 }
 
 func Test_form_customTemplate(t *testing.T) {
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	NoError(t, err)
 	f.WriteString(`<html><body>My custom template {{template "login" .}}</body></html>`)
 	f.Close()
@@ -112,7 +112,7 @@ func Test_form_customTemplate(t *testing.T) {
 }
 
 func Test_form_customTemplate_ParseError(t *testing.T) {
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	NoError(t, err)
 	f.WriteString(`<html><body>My custom template {{template "login" `)
 	f.Close()

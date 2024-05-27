@@ -2,12 +2,13 @@ package osiam
 
 import (
 	"fmt"
-	. "github.com/stretchr/testify/assert"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	. "github.com/stretchr/testify/assert"
 )
 
 func TestClient_GetTokenByPassword(t *testing.T) {
@@ -122,7 +123,7 @@ func osiamMockHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{"timestamp":1479572095876,"status":401,"error":"Unauthorized","message":"Full authentication is required to access this resource","path":"/oauth/token"}`)
 		return
 	}
-	b, _ := ioutil.ReadAll(r.Body)
+	b, _ := io.ReadAll(r.Body)
 
 	if string(b) != "grant_type=password&username=admin&password=koala&scope=ME" {
 		w.WriteHeader(400)

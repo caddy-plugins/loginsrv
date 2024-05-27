@@ -1,7 +1,6 @@
 package login
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -57,7 +56,7 @@ func Test_newUserClaimsFile_InvalidFile(t *testing.T) {
 }
 
 func Test_newUserClaimsFile_InvalidYAML(t *testing.T) {
-	f, _ := ioutil.TempFile("", "")
+	f, _ := os.CreateTemp("", "")
 	f.WriteString(invalidClaimsExample)
 	f.Close()
 	defer os.Remove(f.Name())
@@ -87,7 +86,7 @@ func Test_newUserClaimsFile_ParseFile(t *testing.T) {
 }
 
 func Test_userClaimsFile_Claims(t *testing.T) {
-	f, _ := ioutil.TempFile("", "")
+	f, _ := os.CreateTemp("", "")
 	f.WriteString(claimsExample)
 	f.Close()
 	fileName := f.Name()
@@ -137,7 +136,7 @@ func Test_userClaimsFile_NoMatch(t *testing.T) {
 }
 
 func createClaimsFile(claims string) (string, func()) {
-	f, _ := ioutil.TempFile("", "")
+	f, _ := os.CreateTemp("", "")
 	f.WriteString(claims)
 	f.Close()
 

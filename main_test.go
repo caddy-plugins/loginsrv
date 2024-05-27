@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -35,7 +35,7 @@ func Test_BasicEndToEnd(t *testing.T) {
 	Equal(t, 200, r.StatusCode)
 	Equal(t, r.Header.Get("Content-Type"), "application/jwt")
 
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	NoError(t, err)
 
 	token, err := jwt.Parse(string(b), func(*jwt.Token) (interface{}, error) {

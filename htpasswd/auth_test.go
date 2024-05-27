@@ -1,11 +1,11 @@
 package htpasswd
 
 import (
-	. "github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
+
+	. "github.com/stretchr/testify/assert"
 )
 
 // password for all of them is 'secret'
@@ -55,7 +55,7 @@ func TestAuth_ReloadFile(t *testing.T) {
 	// The refresh is time based, so we have to wait a second, here
 	time.Sleep(time.Second)
 
-	err = ioutil.WriteFile(files[0], []byte(`alice:$apr1$IDZSCL/o$N68zaFDDRivjour94OVeB.`), 06644)
+	err = os.WriteFile(files[0], []byte(`alice:$apr1$IDZSCL/o$N68zaFDDRivjour94OVeB.`), 06644)
 	NoError(t, err)
 
 	authenticated, err = auth.Authenticate("bob", "secret")
@@ -152,7 +152,7 @@ func TestAuth_Hashes_UnknownAlgoError(t *testing.T) {
 func writeTmpfile(contents ...string) []string {
 	var names []string
 	for _, curContent := range contents {
-		f, err := ioutil.TempFile("", "loginsrv_htpasswdtest")
+		f, err := os.CreateTemp("", "loginsrv_htpasswdtest")
 		if err != nil {
 			panic(err)
 		}

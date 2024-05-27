@@ -7,7 +7,6 @@ import (
 
 	"github.com/caddy-plugins/loginsrv/oauth2"
 	. "github.com/stretchr/testify/assert"
-	"io/ioutil"
 )
 
 const BadReferer = "Referer: http://evildomain.com"
@@ -87,7 +86,7 @@ func TestRedirect_PreventExternal(t *testing.T) {
 }
 
 func TestRedirect_Whitelisting(t *testing.T) {
-	whitelistFile, _ := ioutil.TempFile("", "loginsrv_test_domains_whitelist")
+	whitelistFile, _ := os.CreateTemp("", "loginsrv_test_domains_whitelist")
 	whitelistFile.Close()
 	os.Remove(whitelistFile.Name())
 
@@ -108,7 +107,7 @@ func TestRedirect_Whitelisting(t *testing.T) {
 
 	// setup domain whitelist file
 	domains := []byte("foo.com\ngooddomain.com \nbar.com")
-	_ = ioutil.WriteFile(whitelistFile.Name(), domains, 0644)
+	_ = os.WriteFile(whitelistFile.Name(), domains, 0644)
 	defer os.Remove(whitelistFile.Name())
 
 	// allow redirect to domains on whitelist

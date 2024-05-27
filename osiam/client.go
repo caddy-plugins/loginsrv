@@ -3,7 +3,7 @@ package osiam
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -47,7 +47,7 @@ func (c *Client) GetTokenByPassword(username, password string, scopes ...string)
 		return false, nil, err
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return false, nil, err
 	}

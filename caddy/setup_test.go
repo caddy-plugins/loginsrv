@@ -2,7 +2,6 @@ package caddy
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -231,7 +230,7 @@ func TestSetup_RelativeFiles(t *testing.T) {
                         redirect_host_file redirectDomains.txt
                         simple bob=secret
                       }`
-	root, _ := ioutil.TempDir("", "")
+	root, _ := os.MkdirTemp("", "")
 
 	c := caddy.NewTestController("http", caddyfile)
 	c.Key = "RelativeTemplateFileTest"

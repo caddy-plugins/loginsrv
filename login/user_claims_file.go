@@ -1,7 +1,7 @@
 package login
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/caddy-plugins/loginsrv/model"
 	jwt "github.com/golang-jwt/jwt/v4"
@@ -36,7 +36,7 @@ func (c *userClaimsFile) parseUserFile() error {
 	if c.userFile == "" {
 		return nil
 	}
-	b, err := ioutil.ReadFile(c.userFile)
+	b, err := os.ReadFile(c.userFile)
 	if err != nil {
 		return errors.Wrapf(err, "can't read user file %v", c.userFile)
 	}
