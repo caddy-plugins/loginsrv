@@ -24,7 +24,8 @@ var fontAwesomeCSS string
 const partials = `
 
 {{- define "styles" -}}
-<link uic-remove rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<!-- <link uic-remove rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+<link uic-remove rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
 {{- .Styles.CSS -}}
 .vertical-offset-100{padding-top:100px;}
@@ -48,8 +49,8 @@ const partials = `
 
 {{- define "login" -}}
               {{- range $providerName, $opts := .Config.Oauth  -}}
-                <a class="btn btn-block btn-lg btn-social btn-{{ $providerName }}" href="{{ trimRight $.Config.LoginPath "/" }}/{{ $providerName }}">
-                  <span class="fa fa-{{ $providerName }}"></span> Sign in with {{ $providerName | ucfirst }}
+                <a class="btn btn-block btn-lg btn-social btn-primary btn-{{ $providerName }}" href="{{ trimRight $.Config.LoginPath "/" }}/{{ $providerName }}">
+                  <span class="fa fa-user fa-{{ $providerName }}"></span> Sign in with {{ $providerName | ucfirst }}
                 </a>
               {{- end -}}
 
@@ -70,7 +71,7 @@ const partials = `
 	          </div>
 	          <div class="panel-body">
 		    <form accept-charset="UTF-8" role="form" method="POST" action="{{.Config.LoginPath}}">
-                      <fieldset>
+                <fieldset>
 		        <div class="form-group">
 		          <input class="form-control" placeholder="Username" name="username" value="{{.UserInfo.Sub}}" type="text">
 		        </div>
