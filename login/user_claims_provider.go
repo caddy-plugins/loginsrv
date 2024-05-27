@@ -32,7 +32,10 @@ func newUserClaimsProvider(url, auth string, timeout time.Duration) (*userClaims
 
 func (provider *userClaimsProvider) Claims(userInfo model.UserInfo) (jwt.Claims, error) {
 	claimsURL := provider.buildURL(userInfo)
-	req, _ := http.NewRequest(http.MethodGet, claimsURL, nil)
+	req, err := http.NewRequest(http.MethodGet, claimsURL, nil)
+	if err != nil {
+		return nil, err
+	}
 	if provider.auth != "" {
 		req.Header.Add("Authorization", "Bearer "+provider.auth)
 	}
