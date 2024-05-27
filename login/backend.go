@@ -1,7 +1,7 @@
 package login
 
 import (
-	"github.com/tarent/loginsrv/model"
+	"github.com/caddy-plugins/loginsrv/model"
 )
 
 // Backend is an loginsrv authentication extension

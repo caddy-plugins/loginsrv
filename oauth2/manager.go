@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/tarent/loginsrv/model"
+	"github.com/caddy-plugins/loginsrv/model"
 )
 
 // Manager has the responsibility to handle the user user requests in an oauth flow.
@@ -30,10 +30,11 @@ func NewManager() *Manager {
 // Dependent on the code parameter of the url, the oauth flow is started or
 // the call is interpreted as the redirect callback and the token exchange is done.
 // Return parameters:
-//   startedFlow - true, if this was the initial call to start the oauth flow
-//   authenticated - if the authentication was successful or not
-//   userInfo - the user info from the provider in case of a successful authentication
-//   err - an error
+//
+//	startedFlow - true, if this was the initial call to start the oauth flow
+//	authenticated - if the authentication was successful or not
+//	userInfo - the user info from the provider in case of a successful authentication
+//	err - an error
 func (manager *Manager) Handle(w http.ResponseWriter, r *http.Request) (
 	startedFlow bool,
 	authenticated bool,

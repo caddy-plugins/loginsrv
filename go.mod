@@ -1,4 +1,4 @@
-module github.com/tarent/loginsrv
+module github.com/caddy-plugins/loginsrv
 
 go 1.14
 

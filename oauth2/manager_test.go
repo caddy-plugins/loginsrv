@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/caddy-plugins/loginsrv/model"
 	. "github.com/stretchr/testify/assert"
-	"github.com/tarent/loginsrv/model"
 )
 
 func Test_Manager_Positive_Flow(t *testing.T) {

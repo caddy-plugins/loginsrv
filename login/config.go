@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tarent/loginsrv/logging"
-	"github.com/tarent/loginsrv/oauth2"
+	"github.com/caddy-plugins/loginsrv/logging"
+	"github.com/caddy-plugins/loginsrv/oauth2"
 )
 
 var jwtDefaultSecret string

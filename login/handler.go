@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caddy-plugins/loginsrv/logging"
+	"github.com/caddy-plugins/loginsrv/model"
+	"github.com/caddy-plugins/loginsrv/oauth2"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
-	"github.com/tarent/loginsrv/logging"
-	"github.com/tarent/loginsrv/model"
-	"github.com/tarent/loginsrv/oauth2"
 )
 
 const contentTypeHTML = "text/html; charset=utf-8"

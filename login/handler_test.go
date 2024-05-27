@@ -16,10 +16,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/caddy-plugins/loginsrv/model"
+	"github.com/caddy-plugins/loginsrv/oauth2"
 	"github.com/dgrijalva/jwt-go"
 	. "github.com/stretchr/testify/assert"
-	"github.com/tarent/loginsrv/model"
-	"github.com/tarent/loginsrv/oauth2"
 )
 
 const TypeJSON = "Content-Type: application/json"

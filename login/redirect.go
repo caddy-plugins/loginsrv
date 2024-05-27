@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tarent/loginsrv/logging"
+	"github.com/caddy-plugins/loginsrv/logging"
 )
 
 func (h *Handler) setRedirectCookie(w http.ResponseWriter, r *http.Request) {

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/tarent/loginsrv/logging"
-	"github.com/tarent/loginsrv/model"
+	"github.com/caddy-plugins/loginsrv/logging"
+	"github.com/caddy-plugins/loginsrv/model"
 )
 
 const partials = `

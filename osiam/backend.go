@@ -3,7 +3,7 @@ package osiam
 import (
 	"errors"
 	"fmt"
-	"github.com/tarent/loginsrv/model"
+	"github.com/caddy-plugins/loginsrv/model"
 	"net/url"
 )
 

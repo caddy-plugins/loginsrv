@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/caddy-plugins/loginsrv/login"
 	"github.com/caddyserver/caddy"
 	"github.com/caddyserver/caddy/caddyhttp/httpserver"
 	. "github.com/stretchr/testify/assert"
-	"github.com/tarent/loginsrv/login"
 )
 
 func TestSetup(t *testing.T) {

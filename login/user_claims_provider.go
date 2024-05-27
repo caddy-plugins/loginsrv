@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/caddy-plugins/loginsrv/model"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
-	"github.com/tarent/loginsrv/model"
 )
 
 type userClaimsProvider struct {

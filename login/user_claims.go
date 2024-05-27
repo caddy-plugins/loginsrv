@@ -3,9 +3,9 @@ package login
 import (
 	"time"
 
+	"github.com/caddy-plugins/loginsrv/model"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
-	"github.com/tarent/loginsrv/model"
 )
 
 type customClaims map[string]interface{}

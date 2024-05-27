@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/caddy-plugins/loginsrv/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tarent/loginsrv/model"
 )
 
 const (

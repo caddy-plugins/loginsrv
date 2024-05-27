@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/caddy-plugins/loginsrv/login"
+	"github.com/caddy-plugins/loginsrv/model"
 	"github.com/caddyserver/caddy/caddyhttp/httpserver"
-	"github.com/tarent/loginsrv/login"
-	"github.com/tarent/loginsrv/model"
+	"github.com/dgrijalva/jwt-go"
 )
 
-//Tests a page while being logged in as a user (doesn't test that the {user} replacer changes)
+// Tests a page while being logged in as a user (doesn't test that the {user} replacer changes)
 func Test_ServeHTTP_200(t *testing.T) {
 	//Set the ServeHTTP *http.Request
 	r, err := http.NewRequest("GET", "/", nil)
@@ -96,7 +96,7 @@ func Test_ServeHTTP_200(t *testing.T) {
 	*/
 }
 
-//Tests the login page without being logged as a user (doesn't test that the {user} replacer stays as-is)
+// Tests the login page without being logged as a user (doesn't test that the {user} replacer stays as-is)
 func Test_ServeHTTP_login(t *testing.T) {
 	//Set the ServeHTTP *http.Request
 	r, err := http.NewRequest("GET", "/login", nil)

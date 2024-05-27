@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/tarent/loginsrv/model"
+	"github.com/caddy-plugins/loginsrv/model"
 )
 
 var githubAPI = "https://api.github.com"
@@ -32,7 +32,7 @@ var providerGithub = Provider{
 		gu := GithubUser{}
 		url := githubAPI + "/user"
 		req, _ := http.NewRequest("GET", url, nil)
-		req.Header.Set("Authorization", "token " + token.AccessToken)
+		req.Header.Set("Authorization", "token "+token.AccessToken)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return model.UserInfo{}, "", err
