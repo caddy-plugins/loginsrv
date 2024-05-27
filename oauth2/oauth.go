@@ -28,6 +28,8 @@ type Config struct {
 	// Scope specifies optional requested permissions, this is a *space* separated list.
 	Scope string
 
+	Extra map[string]string
+
 	// The oauth provider
 	Provider     goth.Provider
 	mu           sync.RWMutex

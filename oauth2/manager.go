@@ -1,6 +1,7 @@
 package oauth2
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -8,6 +9,11 @@ import (
 
 	"github.com/admpub/goth"
 	"github.com/caddy-plugins/loginsrv/model"
+)
+
+var (
+	errMissingParameterClientID     = errors.New("missing parameter client_id")
+	errMissingParameterClientSecret = errors.New("missing parameter client_secret")
 )
 
 // Manager has the responsibility to handle the user user requests in an oauth flow.
@@ -95,26 +101,27 @@ func (manager *Manager) AddConfig(providerName string, opts map[string]string) e
 	cfg := &Config{
 		ProviderName: providerName,
 	}
-	clientID, exist := opts["client_id"]
-	if !exist {
-		return fmt.Errorf("missing parameter client_id")
-	}
-	cfg.ClientID = clientID
-
-	clientSecret, exist := opts["client_secret"]
-	if !exist {
-		return fmt.Errorf("missing parameter client_secret")
-	}
-	cfg.ClientSecret = clientSecret
-
-	if scope, exist := opts["scope"]; exist {
-		cfg.Scope = scope
-	} else {
-		cfg.Scope = ``
+	cfg.Extra = map[string]string{}
+	for k, v := range opts {
+		switch k {
+		case `client_id`:
+			cfg.ClientID = v
+		case `client_secret`:
+			cfg.ClientSecret = v
+		case `scope`:
+			cfg.Scope = v
+		case `redirect_uri`:
+			cfg.RedirectURI = v
+		default:
+			cfg.Extra[k] = v
+		}
 	}
 
-	if redirectURI, exist := opts["redirect_uri"]; exist {
-		cfg.RedirectURI = redirectURI
+	if len(cfg.ClientID) == 0 {
+		return errMissingParameterClientID
+	}
+	if len(cfg.ClientSecret) == 0 {
+		return errMissingParameterClientSecret
 	}
 
 	p, err := goth.GetProvider(providerName)
