@@ -6,21 +6,22 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/admpub/goth"
 	"github.com/caddy-plugins/loginsrv/model"
 )
 
 // Manager has the responsibility to handle the user user requests in an oauth flow.
 // It has to pick the right configuration and start the oauth redirecting.
 type Manager struct {
-	configs      map[string]Config
-	startFlow    func(cfg Config, w http.ResponseWriter) error
-	authenticate func(cfg Config, r *http.Request) (TokenInfo, error)
+	configs      map[string]*Config
+	startFlow    func(cfg *Config, w http.ResponseWriter, r *http.Request) error
+	authenticate func(cfg *Config, w http.ResponseWriter, r *http.Request) (model.UserInfo, error)
 }
 
 // NewManager creates a new Manager
 func NewManager() *Manager {
 	return &Manager{
-		configs:      map[string]Config{},
+		configs:      map[string]*Config{},
 		startFlow:    StartFlow,
 		authenticate: Authenticate,
 	}
@@ -51,35 +52,36 @@ func (manager *Manager) Handle(w http.ResponseWriter, r *http.Request) (
 	}
 
 	if r.FormValue("code") != "" {
-		tokenInfo, err := manager.authenticate(cfg, r)
-		if err != nil {
-			return false, false, model.UserInfo{}, err
-		}
-
-		userInfo, _, err := cfg.Provider.GetUserInfo(tokenInfo)
+		userInfo, err = manager.authenticate(cfg, w, r)
 		if err != nil {
 			return false, false, model.UserInfo{}, err
 		}
 		return false, true, userInfo, err
 	}
 
-	manager.startFlow(cfg, w)
+	manager.startFlow(cfg, w, r)
 	return true, false, model.UserInfo{}, nil
 }
 
 // GetConfigFromRequest returns the oauth configuration matching the current path.
 // The configuration name is taken from the last path segment.
-func (manager *Manager) GetConfigFromRequest(r *http.Request) (Config, error) {
+func (manager *Manager) GetConfigFromRequest(r *http.Request) (*Config, error) {
 	configName := manager.getConfigNameFromPath(r.URL.Path)
 	cfg, exist := manager.configs[configName]
 	if !exist {
-		return Config{}, fmt.Errorf("no oauth configuration for %v", configName)
+		return nil, fmt.Errorf("no oauth configuration for %v", configName)
 	}
 
 	if cfg.RedirectURI == "" {
 		cfg.RedirectURI = redirectURIFromRequest(r)
 	}
 
+	if cfg.Provider == nil {
+		err := cfg.InitProvider()
+		if err != nil {
+			return nil, err
+		}
+	}
 	return cfg, nil
 }
 
@@ -90,18 +92,9 @@ func (manager *Manager) getConfigNameFromPath(path string) string {
 
 // AddConfig for a provider
 func (manager *Manager) AddConfig(providerName string, opts map[string]string) error {
-	p, exist := GetProvider(providerName)
-
-	if !exist {
-		return fmt.Errorf("no provider for name %v", providerName)
+	cfg := &Config{
+		ProviderName: providerName,
 	}
-
-	cfg := Config{
-		Provider: p,
-		AuthURL:  p.AuthURL,
-		TokenURL: p.TokenURL,
-	}
-
 	clientID, exist := opts["client_id"]
 	if !exist {
 		return fmt.Errorf("missing parameter client_id")
@@ -117,19 +110,28 @@ func (manager *Manager) AddConfig(providerName string, opts map[string]string) e
 	if scope, exist := opts["scope"]; exist {
 		cfg.Scope = scope
 	} else {
-		cfg.Scope = p.DefaultScopes
+		cfg.Scope = ``
 	}
 
 	if redirectURI, exist := opts["redirect_uri"]; exist {
 		cfg.RedirectURI = redirectURI
 	}
 
+	p, err := goth.GetProvider(providerName)
+	if err != nil {
+		p, err = cfg.NewProvider()
+		if err != nil {
+			return err
+		}
+	}
+
+	cfg.Provider = p
 	manager.configs[providerName] = cfg
 	return nil
 }
 
 // GetConfigs of the manager
-func (manager *Manager) GetConfigs() map[string]Config {
+func (manager *Manager) GetConfigs() map[string]*Config {
 	return manager.configs
 }
 

@@ -2,86 +2,70 @@ package login
 
 import (
 	"bytes"
+	_ "embed"
 	"html/template"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/caddy-plugins/loginsrv/logging"
 	"github.com/caddy-plugins/loginsrv/model"
 )
 
+//go:embed bootstrap.min.css
+var bootstrapCSS string
+
+//go:embed bootstrap-social.min.css
+var bsSocialCSS string
+
+//go:embed font-awesome.css
+var fontAwesomeCSS string
+
 const partials = `
 
-{{define "styles"}}
-    <link uic-remove rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-    <link uic-remove rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-social/5.1.1/bootstrap-social.min.css">
-    <link uic-remove rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
-    <style>
-     .vertical-offset-100{
-       padding-top:100px;
-     }
-     .login-or-container {
-       text-align: center;
-       margin: 0;
-       margin-bottom: 10px;
-       clear: both;
-       color: #6a737c;
-       font-variant: small-caps;
-     }
-     .login-or-hr {
-       margin-bottom: 0;
-       position: relative;
-       top: 28px;
-       height: 0;
-       border: 0;
-       border-top: 1px solid #e4e6e8;
-     }
-     .login-or {
-       display: inline-block;
-       position: relative;
-       padding: 10px;
-       background-color: #FFF;
-     }
-     .login-picture {
-       height: 120px;
-       border-radius: 3px;
-       margin-bottom: 10px;
-     }
-    </style>
-{{end}}
+{{- define "styles" -}}
+<link uic-remove rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+{{- .Styles.CSS -}}
+.vertical-offset-100{padding-top:100px;}
+.login-or-container {text-align: center;margin: 0;margin-bottom: 10px;clear: both;color: #6a737c;font-variant: small-caps;}
+.login-or-hr {margin-bottom: 0;position: relative;top: 28px;height: 0;border: 0;border-top: 1px solid #e4e6e8;}
+.login-or {display: inline-block;position: relative;padding: 10px;background-color: #FFF;}
+.login-picture {height: 120px;border-radius: 3px;margin-bottom: 10px;}
+</style>
+{{- end -}}
 
-{{define "userInfo"}}
-              {{with .UserInfo}}
+{{- define "userInfo" -}}
+              {{- with .UserInfo -}}
                 <h1>Welcome {{.Sub}}!</h1>
                 <br/>
-                {{if .Picture}}<img class="login-picture" src="{{.Picture}}?s=120">{{end}}
-                {{if .Name}}<h3>{{.Name}}</h3>{{end}}
-              {{end}}
+                {{if .Picture}}<img class="login-picture" src="{{.Picture}}?s=120">{{end -}}
+                {{if .Name}}<h3>{{.Name}}</h3>{{end -}}
+              {{- end -}}
               <br/>
               <a class="btn btn-md btn-primary" href="{{ .Config.LoginPath }}?logout=true">Logout</a>
-{{end}}
+{{- end -}}
 
-{{define "login"}}
-              {{ range $providerName, $opts := .Config.Oauth }}
+{{- define "login" -}}
+              {{- range $providerName, $opts := .Config.Oauth  -}}
                 <a class="btn btn-block btn-lg btn-social btn-{{ $providerName }}" href="{{ trimRight $.Config.LoginPath "/" }}/{{ $providerName }}">
                   <span class="fa fa-{{ $providerName }}"></span> Sign in with {{ $providerName | ucfirst }}
                 </a>
-              {{end}}
+              {{- end -}}
 
-              {{if and (not (eq (len .Config.Backends) 0)) (not (eq (len .Config.Oauth) 0))}}
+              {{- if and (not (eq (len .Config.Backends) 0)) (not (eq (len .Config.Oauth) 0)) -}}
                 <div class="login-or-container">
                   <hr class="login-or-hr">
                   <div class="login-or lead">or</div>
                 </div>
-              {{end}}
+              {{- end -}}
 
-              {{if not (eq (len .Config.Backends) 0) }}
+              {{- if not (eq (len .Config.Backends) 0)  -}}
                 <div class="panel panel-default">
   	          <div class="panel-heading">  
   		    <div class="panel-title">
   		      <h4>Sign in</h4>
-                      {{ if .Failure}}<div class="alert alert-warning" role="alert">Invalid credentials</div>{{end}} 
+                      {{- if .Failure}}<div class="alert alert-warning" role="alert">Invalid credentials</div>{{- end -}} 
 		    </div>
 	          </div>
 	          <div class="panel-body">
@@ -98,14 +82,14 @@ const partials = `
 		    </form>
 	          </div>
 	        </div>
-              {{end}}
-{{end}}`
+              {{- end -}}
+{{- end}}`
 
 var layout = `<!DOCTYPE html>
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    {{ template "styles" . }}
+    {{- template "styles" . -}}
   </head>
   <body>
     <uic-fragment name="content">
@@ -113,21 +97,21 @@ var layout = `<!DOCTYPE html>
         <div class="row vertical-offset-100">
     	  <div class="col-md-4 col-md-offset-4">
 
-            {{ if .Error}}
+            {{- if .Error -}}
               <div class="alert alert-danger" role="alert">
                 <strong>Internal Error. </strong> Please try again later.
               </div>
-            {{end}}
+            {{end -}}
 
-            {{if .Authenticated}}
+            {{- if .Authenticated -}}
 
-              {{template "userInfo" . }}
+              {{template "userInfo" .  -}}
 
-            {{else}}
+            {{- else -}}
 
-              {{template "login" . }}
+              {{- template "login" .  -}}
 
-            {{end}}
+            {{- end -}}
 	  </div>
 	</div>
       </div>
@@ -141,9 +125,29 @@ type loginFormData struct {
 	Config        *Config
 	Authenticated bool
 	UserInfo      model.UserInfo
+	Styles        Styles
+}
+
+type Styles struct {
+	Bootstrap   string
+	BSSocial    string
+	FontAwesome string
+}
+
+func (s Styles) String() string {
+	return s.Bootstrap + s.BSSocial + s.FontAwesome
+}
+
+func (s Styles) CSS() template.CSS {
+	return template.CSS(s.String())
 }
 
 func writeLoginForm(w http.ResponseWriter, params loginFormData) {
+	params.Styles = Styles{
+		Bootstrap:   bootstrapCSS,
+		BSSocial:    bsSocialCSS,
+		FontAwesome: fontAwesomeCSS,
+	}
 	funcMap := template.FuncMap{
 		"ucfirst":   ucfirst,
 		"trimRight": strings.TrimRight,
@@ -155,7 +159,7 @@ func writeLoginForm(w http.ResponseWriter, params loginFormData) {
 	t := template.New(templateName).Funcs(funcMap)
 	t = template.Must(t.Parse(partials))
 	if params.Config != nil && params.Config.Template != "" {
-		customTemplate, err := ioutil.ReadFile(params.Config.Template)
+		customTemplate, err := os.ReadFile(params.Config.Template)
 		if err != nil {
 			logging.Logger.WithError(err).Error()
 			w.WriteHeader(500)

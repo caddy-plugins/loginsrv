@@ -7,62 +7,53 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/admpub/goth"
+	"github.com/admpub/goth/providers/faux"
 	"github.com/caddy-plugins/loginsrv/model"
 	. "github.com/stretchr/testify/assert"
 )
 
 func Test_Manager_Positive_Flow(t *testing.T) {
-	var startFlowCalled, authenticateCalled, getUserInfoCalled bool
-	var startFlowReceivedConfig, authenticateReceivedConfig Config
-	expectedToken := TokenInfo{AccessToken: "the-access-token"}
+	var startFlowCalled, authenticateCalled bool
+	var startFlowReceivedConfig, authenticateReceivedConfig *Config
+	expectedUser := model.UserInfo{Sub: "testUser"}
 
-	exampleProvider := Provider{
-		Name:     "example",
-		AuthURL:  "https://example.com/login/oauth/authorize",
-		TokenURL: "https://example.com/login/oauth/access_token",
-		GetUserInfo: func(token TokenInfo) (model.UserInfo, string, error) {
-			getUserInfoCalled = true
-			Equal(t, token, expectedToken)
-			return model.UserInfo{
-				Sub: "the-username",
-			}, "", nil
-		},
-	}
-	RegisterProvider(exampleProvider)
-	defer UnRegisterProvider(exampleProvider.Name)
+	exampleProvider := &faux.Provider{}
+	goth.UseProviders(exampleProvider)
+	defer goth.DeleteProvider(exampleProvider.Name())
 
-	expectedConfig := Config{
+	expectedConfig := &Config{
 		ClientID:     "client42",
 		ClientSecret: "secret",
-		AuthURL:      exampleProvider.AuthURL,
-		TokenURL:     exampleProvider.TokenURL,
 		RedirectURI:  "http://localhost",
 		Scope:        "email other",
 		Provider:     exampleProvider,
 	}
 
 	m := NewManager()
-	m.AddConfig(exampleProvider.Name, map[string]string{
+	m.AddConfig(exampleProvider.Name(), map[string]string{
 		"client_id":     expectedConfig.ClientID,
 		"client_secret": expectedConfig.ClientSecret,
 		"scope":         expectedConfig.Scope,
 		"redirect_uri":  expectedConfig.RedirectURI,
 	})
 
-	m.startFlow = func(cfg Config, w http.ResponseWriter) error {
+	m.startFlow = func(cfg *Config, w http.ResponseWriter, r *http.Request) error {
 		startFlowCalled = true
 		startFlowReceivedConfig = cfg
+		//panic(`1`)
 		return nil
 	}
 
-	m.authenticate = func(cfg Config, r *http.Request) (TokenInfo, error) {
+	m.authenticate = func(cfg *Config, w http.ResponseWriter, r *http.Request) (model.UserInfo, error) {
 		authenticateCalled = true
 		authenticateReceivedConfig = cfg
-		return expectedToken, nil
+		//panic(`2`)
+		return expectedUser, nil
 	}
 
 	// start flow
-	r, _ := http.NewRequest("GET", "http://example.com/login/"+exampleProvider.Name, nil)
+	r, _ := http.NewRequest("GET", "http://example.com/login/"+exampleProvider.Name(), nil)
 
 	startedFlow, authenticated, userInfo, err := m.Handle(httptest.NewRecorder(), r)
 	NoError(t, err)
@@ -76,47 +67,37 @@ func Test_Manager_Positive_Flow(t *testing.T) {
 	assertEqualConfig(t, expectedConfig, startFlowReceivedConfig)
 
 	// callback
-	r, _ = http.NewRequest("GET", "http://example.com/login/"+exampleProvider.Name+"?code=xyz", nil)
+	r, _ = http.NewRequest("GET", "http://example.com/login/"+exampleProvider.Name()+"?code=xyz", nil)
 
 	startedFlow, authenticated, userInfo, err = m.Handle(httptest.NewRecorder(), r)
 	NoError(t, err)
 	False(t, startedFlow)
 	True(t, authenticated)
-	Equal(t, model.UserInfo{Sub: "the-username"}, userInfo)
+	Equal(t, model.UserInfo{Sub: expectedUser.Sub}, userInfo)
 	True(t, authenticateCalled)
 	assertEqualConfig(t, expectedConfig, authenticateReceivedConfig)
-
-	True(t, getUserInfoCalled)
 }
 
 func Test_Manager_NoAauthOnWrongCode(t *testing.T) {
-	var authenticateCalled, getUserInfoCalled bool
+	var authenticateCalled bool
 
-	exampleProvider := Provider{
-		Name:     "example",
-		AuthURL:  "https://example.com/login/oauth/authorize",
-		TokenURL: "https://example.com/login/oauth/access_token",
-		GetUserInfo: func(token TokenInfo) (model.UserInfo, string, error) {
-			getUserInfoCalled = true
-			return model.UserInfo{}, "", nil
-		},
-	}
-	RegisterProvider(exampleProvider)
-	defer UnRegisterProvider(exampleProvider.Name)
+	exampleProvider := &faux.Provider{}
+	goth.UseProviders(exampleProvider)
+	defer goth.DeleteProvider(exampleProvider.Name())
 
 	m := NewManager()
-	m.AddConfig(exampleProvider.Name, map[string]string{
+	m.AddConfig(exampleProvider.Name(), map[string]string{
 		"client_id":     "foo",
 		"client_secret": "bar",
 	})
 
-	m.authenticate = func(cfg Config, r *http.Request) (TokenInfo, error) {
+	m.authenticate = func(cfg *Config, w http.ResponseWriter, r *http.Request) (model.UserInfo, error) {
 		authenticateCalled = true
-		return TokenInfo{}, errors.New("code not valid")
+		return model.UserInfo{}, errors.New("code not valid")
 	}
 
 	// callback
-	r, _ := http.NewRequest("GET", "http://example.com/login/"+exampleProvider.Name+"?code=xyz", nil)
+	r, _ := http.NewRequest("GET", "http://example.com/login/"+exampleProvider.Name()+"?code=xyz", nil)
 
 	startedFlow, authenticated, userInfo, err := m.Handle(httptest.NewRecorder(), r)
 	EqualError(t, err, "code not valid")
@@ -124,7 +105,6 @@ func Test_Manager_NoAauthOnWrongCode(t *testing.T) {
 	False(t, authenticated)
 	Equal(t, model.UserInfo{}, userInfo)
 	True(t, authenticateCalled)
-	False(t, getUserInfoCalled)
 }
 
 func Test_Manager_getConfig_ErrorCase(t *testing.T) {
@@ -226,7 +206,7 @@ func Test_Manager_redirectUriFromRequest(t *testing.T) {
 }
 
 func Test_Manager_RedirectURI_Generation(t *testing.T) {
-	var startFlowReceivedConfig Config
+	var startFlowReceivedConfig *Config
 
 	m := NewManager()
 	m.AddConfig("github", map[string]string{
@@ -235,7 +215,7 @@ func Test_Manager_RedirectURI_Generation(t *testing.T) {
 		"scope":         "bazz",
 	})
 
-	m.startFlow = func(cfg Config, w http.ResponseWriter) error {
+	m.startFlow = func(cfg *Config, w http.ResponseWriter, r *http.Request) error {
 		startFlowReceivedConfig = cfg
 		return nil
 	}
@@ -248,12 +228,10 @@ func Test_Manager_RedirectURI_Generation(t *testing.T) {
 	Equal(t, callURL, startFlowReceivedConfig.RedirectURI)
 }
 
-func assertEqualConfig(t *testing.T, c1, c2 Config) {
-	Equal(t, c1.AuthURL, c2.AuthURL)
+func assertEqualConfig(t *testing.T, c1, c2 *Config) {
 	Equal(t, c1.ClientID, c2.ClientID)
 	Equal(t, c1.ClientSecret, c2.ClientSecret)
 	Equal(t, c1.Scope, c2.Scope)
 	Equal(t, c1.RedirectURI, c2.RedirectURI)
-	Equal(t, c1.TokenURL, c2.TokenURL)
-	Equal(t, c1.Provider.Name, c2.Provider.Name)
+	Equal(t, c1.GetProvider().Name(), c2.GetProvider().Name())
 }

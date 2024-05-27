@@ -2,15 +2,14 @@ package oauth2
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
-	"time"
+	"sync"
+
+	"github.com/admpub/goth"
+	"github.com/admpub/goth/gothic"
+	"github.com/caddy-plugins/loginsrv/model"
 )
 
 // Config describes a typical 3-legged OAuth2 flow, with both the
@@ -22,12 +21,6 @@ type Config struct {
 	// ClientSecret is the application's secret.
 	ClientSecret string
 
-	// The oauth authentication url to redirect to
-	AuthURL string
-
-	// The url for token exchange
-	TokenURL string
-
 	// RedirectURL is the URL to redirect users going through
 	// the OAuth flow, after the resource owner's URLs.
 	RedirectURI string
@@ -36,132 +29,83 @@ type Config struct {
 	Scope string
 
 	// The oauth provider
-	Provider Provider
+	Provider     goth.Provider
+	mu           sync.RWMutex
+	ProviderName string
 }
 
-// TokenInfo represents the credentials used to authorize
-// the requests to access protected resources on the OAuth 2.0
-// provider's backend.
-type TokenInfo struct {
-	// AccessToken is the token that authorizes and authenticates
-	// the requests.
-	AccessToken string `json:"access_token"`
-
-	// TokenType is the type of token.
-	TokenType string `json:"token_type,omitempty"`
-
-	// The scopes for this tolen
-	Scope string `json:"scope,omitempty"`
+func (cfg *Config) SetProvider(provider goth.Provider) *Config {
+	cfg.mu.Lock()
+	cfg.Provider = provider
+	cfg.mu.Unlock()
+	return cfg
 }
 
-// JSONError represents an oauth error response in json form.
-type JSONError struct {
-	Error string `json:"error"`
+func (cfg *Config) GetProvider() goth.Provider {
+	cfg.mu.RLock()
+	provider := cfg.Provider
+	cfg.mu.RUnlock()
+	return provider
 }
 
-const stateCookieName = "oauthState"
-const defaultTimeout = 5 * time.Second
-
-// StartFlow by redirecting the user to the login provider.
-// A state parameter to protect against cross-site request forgery attacks is randomly generated and stored in a cookie
-func StartFlow(cfg Config, w http.ResponseWriter) error {
-	values := make(url.Values)
-	values.Set("client_id", cfg.ClientID)
-	values.Set("scope", cfg.Scope)
-	values.Set("redirect_uri", cfg.RedirectURI)
-	values.Set("response_type", "code")
-
-	// set and store the state param
-	state, err := randStringBytes(32)
+func (cfg *Config) InitProvider() error {
+	provider, err := cfg.NewProvider()
 	if err != nil {
 		return err
 	}
-	values.Set("state", state)
-	http.SetCookie(w, &http.Cookie{
-		Name:     stateCookieName,
-		MaxAge:   60 * 10, // 10 minutes
-		Value:    values.Get("state"),
-		HttpOnly: true,
-	})
+	cfg.SetProvider(provider)
+	return nil
+}
 
-	targetURL := cfg.AuthURL + "?" + values.Encode()
-	w.Header().Set("Location", targetURL)
-	w.WriteHeader(http.StatusFound)
+func (cfg *Config) GetScopes() []string {
+	var scopes []string
+	if len(cfg.Scope) > 0 {
+		scopes = strings.Split(cfg.Scope, ` `)
+	}
+	return scopes
+}
 
+func (cfg *Config) NewProvider() (p goth.Provider, err error) {
+	if newI, ok := constructors[cfg.ProviderName]; ok {
+		p = newI(cfg)
+		goth.UseProviders(p)
+		return
+	}
+	err = fmt.Errorf("no provider for name %v", cfg.ProviderName)
+	return
+}
+
+// StartFlow by redirecting the user to the login provider.
+// A state parameter to protect against cross-site request forgery attacks is randomly generated and stored in a cookie
+func StartFlow(cfg *Config, w http.ResponseWriter, r *http.Request) error {
+	r = r.WithContext(context.WithValue(r.Context(), gothic.ProviderParamKey, cfg.ProviderName))
+	gothic.BeginAuthHandler(w, r)
 	return nil
 }
 
 // Authenticate after coming back from the oauth flow.
 // Verify the state parameter againt the state cookie from the request.
-func Authenticate(cfg Config, r *http.Request) (TokenInfo, error) {
-	if r.FormValue("error") != "" {
-		return TokenInfo{}, fmt.Errorf("error: %v", r.FormValue("error"))
+func Authenticate(cfg *Config, w http.ResponseWriter, r *http.Request) (model.UserInfo, error) {
+	r = r.WithContext(context.WithValue(r.Context(), gothic.ProviderParamKey, cfg.ProviderName))
+	user, err := gothic.CompleteUserAuth(w, r)
+	if err != nil {
+		return model.UserInfo{}, err
 	}
-
-	state := r.FormValue("state")
-	stateCookie, err := r.Cookie(stateCookieName)
-	if err != nil || stateCookie.Value != state {
-		return TokenInfo{}, fmt.Errorf("error: oauth state param could not be verified")
-	}
-
-	code := r.FormValue("code")
-	if code == "" {
-		return TokenInfo{}, fmt.Errorf("error: no auth code provided")
-	}
-	return getAccessToken(cfg, state, code)
+	return model.UserInfo{
+		Sub:     user.Name,
+		Picture: user.AvatarURL,
+		Name:    user.NickName,
+		Email:   user.Email,
+		Origin:  user.Provider,
+	}, nil
 }
 
-func getAccessToken(cfg Config, state, code string) (TokenInfo, error) {
-	values := url.Values{}
-	values.Set("client_id", cfg.ClientID)
-	values.Set("client_secret", cfg.ClientSecret)
-	values.Set("code", code)
-	values.Set("redirect_uri", cfg.RedirectURI)
-	values.Set("grant_type", "authorization_code")
-
-	r, _ := http.NewRequest("POST", cfg.TokenURL, strings.NewReader(values.Encode()))
-	cntx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
-	defer cancel()
-	r.WithContext(cntx)
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Set("Accept", "application/json")
-	resp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		return TokenInfo{}, err
+// ProviderList returns the names of all registered provider
+func ProviderList() []string {
+	providers := goth.GetProviders()
+	list := make([]string, 0, len(providers))
+	for k := range providers {
+		list = append(list, k)
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return TokenInfo{}, fmt.Errorf("error: expected http status 200 on token exchange, but got %v", resp.StatusCode)
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return TokenInfo{}, fmt.Errorf("error reading token exchange response: %q", err)
-	}
-
-	jsonError := JSONError{}
-	json.Unmarshal(body, &jsonError)
-	if jsonError.Error != "" {
-		return TokenInfo{}, fmt.Errorf("error: got %q on token exchange", jsonError.Error)
-	}
-
-	tokenInfo := TokenInfo{}
-	err = json.Unmarshal(body, &tokenInfo)
-	if err != nil {
-		return TokenInfo{}, fmt.Errorf("error on parsing oauth token: %v", err)
-	}
-
-	if tokenInfo.AccessToken == "" {
-		return TokenInfo{}, fmt.Errorf("error: no access_token on token exchange")
-	}
-	return tokenInfo, nil
-}
-
-func randStringBytes(n int) (string, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(b), nil
+	return list
 }

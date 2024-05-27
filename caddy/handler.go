@@ -2,10 +2,11 @@ package caddy
 
 import (
 	"context"
-	"github.com/caddy-plugins/loginsrv/login"
-	"github.com/caddyserver/caddy/caddyhttp/httpserver"
 	"net/http"
 	"strings"
+
+	"github.com/admpub/caddy/caddyhttp/httpserver"
+	"github.com/caddy-plugins/loginsrv/login"
 )
 
 // CaddyHandler is the loginsrv handler wrapper for caddy

@@ -3,7 +3,7 @@ package login
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -11,7 +11,7 @@ import (
 	"github.com/caddy-plugins/loginsrv/logging"
 	"github.com/caddy-plugins/loginsrv/model"
 	"github.com/caddy-plugins/loginsrv/oauth2"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 )
 
@@ -421,7 +421,7 @@ func wantJSON(r *http.Request) bool {
 func getCredentials(r *http.Request) (string, string, error) {
 	if strings.HasPrefix(r.Header.Get("Content-Type"), contentTypeJSON) {
 		m := map[string]string{}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			return "", "", err
 		}
@@ -454,5 +454,5 @@ type oauthManager interface {
 		userInfo model.UserInfo,
 		err error)
 	AddConfig(providerName string, opts map[string]string) error
-	GetConfigFromRequest(r *http.Request) (oauth2.Config, error)
+	GetConfigFromRequest(r *http.Request) (*oauth2.Config, error)
 }

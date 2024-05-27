@@ -3,7 +3,6 @@ package login
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -101,7 +100,7 @@ func TestConfig_ReadConfig_SecretFile(t *testing.T) {
 	// create a temporary file, containing the desired secret
 	testSecret := "superSecret"
 
-	file, err := ioutil.TempFile("", "")
+	file, err := os.CreateTemp("", "")
 	NoError(t, err)
 	defer func() {
 		// cleanup after test
@@ -228,7 +227,7 @@ func TestConfig_ReadConfigFromEnv_SecretFile(t *testing.T) {
 	// create a temporary file, containing the desired secret
 	testSecret := "superSecret"
 
-	file, err := ioutil.TempFile("", "")
+	file, err := os.CreateTemp("", "")
 	NoError(t, err)
 	defer func() {
 		// cleanup after test

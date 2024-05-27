@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/admpub/caddy/caddyhttp/httpserver"
 	"github.com/caddy-plugins/loginsrv/login"
 	"github.com/caddy-plugins/loginsrv/model"
-	"github.com/caddyserver/caddy/caddyhttp/httpserver"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // Tests a page while being logged in as a user (doesn't test that the {user} replacer changes)

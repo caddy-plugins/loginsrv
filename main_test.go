@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/dgrijalva/jwt-go"
-	. "github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
+	. "github.com/stretchr/testify/assert"
 )
 
 func Test_BasicEndToEnd(t *testing.T) {

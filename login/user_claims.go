@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/caddy-plugins/loginsrv/model"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 )
 

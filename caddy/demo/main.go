@@ -1,9 +1,9 @@
 package main
 
 import (
-	_ "github.com/BTBurke/caddy-jwt"
+	"github.com/admpub/caddy/caddy/caddymain"
+	_ "github.com/caddy-plugins/caddy-jwt/v3"
 	_ "github.com/caddy-plugins/loginsrv/caddy"
-	"github.com/caddyserver/caddy/caddy/caddymain"
 )
 
 func main() {

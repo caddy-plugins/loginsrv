@@ -18,7 +18,7 @@ import (
 
 	"github.com/caddy-plugins/loginsrv/model"
 	"github.com/caddy-plugins/loginsrv/oauth2"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	. "github.com/stretchr/testify/assert"
 )
 
@@ -152,8 +152,8 @@ func TestHandler_LoginJson(t *testing.T) {
 
 func TestHandler_HandleOauth(t *testing.T) {
 	managerMock := &oauth2ManagerMock{
-		_GetConfigFromRequest: func(r *http.Request) (oauth2.Config, error) {
-			return oauth2.Config{}, nil
+		_GetConfigFromRequest: func(r *http.Request) (*oauth2.Config, error) {
+			return &oauth2.Config{}, nil
 		},
 	}
 	handler := &Handler{
@@ -710,7 +710,7 @@ type oauth2ManagerMock struct {
 		userInfo model.UserInfo,
 		err error)
 	_AddConfig            func(providerName string, opts map[string]string) error
-	_GetConfigFromRequest func(r *http.Request) (oauth2.Config, error)
+	_GetConfigFromRequest func(r *http.Request) (*oauth2.Config, error)
 }
 
 func (m *oauth2ManagerMock) Handle(w http.ResponseWriter, r *http.Request) (
@@ -723,7 +723,7 @@ func (m *oauth2ManagerMock) Handle(w http.ResponseWriter, r *http.Request) (
 func (m *oauth2ManagerMock) AddConfig(providerName string, opts map[string]string) error {
 	return m._AddConfig(providerName, opts)
 }
-func (m *oauth2ManagerMock) GetConfigFromRequest(r *http.Request) (oauth2.Config, error) {
+func (m *oauth2ManagerMock) GetConfigFromRequest(r *http.Request) (*oauth2.Config, error) {
 	return m._GetConfigFromRequest(r)
 }
 

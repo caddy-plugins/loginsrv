@@ -6,7 +6,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -120,7 +119,7 @@ func (c *Config) addBackendOpts(providerName, optsKvList string) error {
 func (c *Config) ResolveFileReferences() error {
 	// Try to load the secret from a file, if set
 	if c.JwtSecretFile != "" {
-		secretBytes, err := ioutil.ReadFile(c.JwtSecretFile)
+		secretBytes, err := os.ReadFile(c.JwtSecretFile)
 		if err != nil {
 			return err
 		}
@@ -180,7 +179,7 @@ func (c *Config) ConfigureFlagSet(f *flag.FlagSet) {
 	f.Var(deprecatedBackends, "backend", "Deprecated, please use the explicit flags")
 
 	// One option for each oauth provider
-	for _, pName := range oauth2.ProviderList() {
+	for _, pName := range oauth2.ConstructorList() {
 		func(pName string) {
 			setter := setFunc(func(optsKvList string) error {
 				return c.addOauthOpts(pName, optsKvList)
@@ -195,8 +194,10 @@ func (c *Config) ConfigureFlagSet(f *flag.FlagSet) {
 			setter := setFunc(func(optsKvList string) error {
 				return c.addBackendOpts(pName, optsKvList)
 			})
-			desc, _ := GetProviderDescription(pName)
-			f.Var(setter, pName, desc.HelpText)
+			desc, exists := GetProviderDescription(pName)
+			if exists {
+				f.Var(setter, pName, desc.HelpText)
+			}
 		}(pName)
 	}
 }

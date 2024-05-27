@@ -8,10 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/admpub/caddy"
+	"github.com/admpub/caddy/caddyhttp/httpserver"
+	"github.com/admpub/goth"
 	"github.com/caddy-plugins/loginsrv/logging"
 	"github.com/caddy-plugins/loginsrv/login"
-	"github.com/caddyserver/caddy"
-	"github.com/caddyserver/caddy/caddyhttp/httpserver"
 
 	// Import all backends, packaged with the caddy plugin
 	_ "github.com/caddy-plugins/loginsrv/htpasswd"
@@ -30,7 +31,7 @@ func init() {
 // setup configures a new loginsrv instance.
 func setup(c *caddy.Controller) error {
 	logging.Set("info", true)
-
+	goth.ClearProviders()
 	for c.Next() {
 		args := c.RemainingArgs()
 
