@@ -131,7 +131,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	if r.Method == "DELETE" || r.FormValue("logout") == "true" {
-		h.deleteToken(w)
+		h.deleteToken(w, r)
 		if h.config.LogoutURL != "" {
 			w.Header().Set("Location", h.config.LogoutURL)
 			w.WriteHeader(303)
@@ -221,7 +221,7 @@ func (h *Handler) handleRefresh(w http.ResponseWriter, r *http.Request, userInfo
 	}
 }
 
-func (h *Handler) deleteToken(w http.ResponseWriter) {
+func (h *Handler) deleteToken(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Name:     h.config.CookieName,
 		Value:    "delete",
@@ -233,6 +233,7 @@ func (h *Handler) deleteToken(w http.ResponseWriter) {
 		cookie.Domain = h.config.CookieDomain
 	}
 	http.SetCookie(w, cookie)
+	oauth2.Logout(w, r)
 }
 
 func (h *Handler) respondAuthenticated(w http.ResponseWriter, r *http.Request, userInfo model.UserInfo) {

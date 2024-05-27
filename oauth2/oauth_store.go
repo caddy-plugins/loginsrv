@@ -1,6 +1,7 @@
 package oauth2
 
 import (
+	"net/http"
 	"os"
 
 	"github.com/admpub/goth/gothic"
@@ -23,4 +24,9 @@ func SetCookieStore(secret string) {
 
 func SetSessionStore(store sessions.Store) {
 	gothic.Store = store
+}
+
+// Logout invalidates a user session.
+func Logout(res http.ResponseWriter, req *http.Request) error {
+	return gothic.Logout(res, req)
 }
