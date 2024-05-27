@@ -5,17 +5,17 @@ go 1.21
 require (
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/admpub/caddy v1.2.7
-	github.com/admpub/goth v0.0.1
+	github.com/admpub/goth v0.0.2
 	github.com/caddy-plugins/caddy-jwt/v3 v3.8.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/sessions v1.2.2
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/tarent/lib-compose/v2 v2.0.1
 	github.com/webx-top/com v1.2.13
 	golang.org/x/crypto v0.23.0
-	golang.org/x/oauth2 v0.16.0
+	golang.org/x/oauth2 v0.17.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
