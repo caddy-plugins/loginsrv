@@ -20,6 +20,7 @@ http://localhost:18080 {
         # for testing, where no https is available, don't set the secure flag for the.
         cookie_secure false
         github client_id=1111,client_secret=2223
+        nging client_id=303889756364734464,client_secret=test,host_url=https://b.webx.top
   }
   
 }

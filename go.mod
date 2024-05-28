@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/admpub/caddy v1.2.7
-	github.com/admpub/goth v0.0.3
+	github.com/admpub/goth v0.0.4
 	github.com/caddy-plugins/caddy-jwt/v3 v3.8.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/sessions v1.2.2
@@ -15,7 +15,7 @@ require (
 	github.com/tarent/lib-compose/v2 v2.0.1
 	github.com/webx-top/com v1.2.13
 	golang.org/x/crypto v0.23.0
-	golang.org/x/oauth2 v0.17.0
+	golang.org/x/oauth2 v0.19.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -33,7 +33,6 @@ require (
 	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/pprof v0.0.0-20240525223248-4bfdf5a9a2af // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
@@ -63,7 +62,6 @@ require (
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/tools v0.21.0 // indirect
-	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

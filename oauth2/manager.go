@@ -78,7 +78,7 @@ func (manager *Manager) GetConfigFromRequest(r *http.Request) (*Config, error) {
 		return nil, fmt.Errorf("no oauth configuration for %v", configName)
 	}
 
-	if cfg.RedirectURI == "" {
+	if len(cfg.RedirectURI) == 0 {
 		cfg.RedirectURI = redirectURIFromRequest(r)
 	}
 
