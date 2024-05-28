@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -34,6 +35,8 @@ type Handler struct {
 	userClaims       userClaimsFunc
 }
 
+var ErrNoSuchProvider = errors.New(`No such provider`)
+
 // NewHandler creates a login handler based on the supplied configuration.
 func NewHandler(config *Config) (*Handler, error) {
 	if len(config.Backends) == 0 && len(config.Oauth) == 0 {
@@ -44,7 +47,7 @@ func NewHandler(config *Config) (*Handler, error) {
 	for pName, opts := range config.Backends {
 		p, exist := GetProvider(pName)
 		if !exist {
-			return nil, fmt.Errorf("No such provider: %v", pName)
+			return nil, fmt.Errorf("%w: %v", ErrNoSuchProvider, pName)
 		}
 		b, err := p(opts)
 		if err != nil {
@@ -54,7 +57,11 @@ func NewHandler(config *Config) (*Handler, error) {
 	}
 
 	oauth := oauth2.NewManager()
+	defaultRedirectURI := config.LoginPath
 	for providerName, opts := range config.Oauth {
+		if ru, ok := opts[`redirect_uri`]; !ok || len(ru) == 0 {
+			opts[`redirect_uri`] = path.Join(defaultRedirectURI, providerName)
+		}
 		err := oauth.AddConfig(providerName, opts)
 		if err != nil {
 			return nil, err

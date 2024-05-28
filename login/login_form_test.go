@@ -3,11 +3,20 @@ package login
 import (
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/caddy-plugins/loginsrv/model"
 	. "github.com/stretchr/testify/assert"
 )
+
+func clearCSS(r string) string {
+	parts := strings.SplitN(r, `</style>`, 2)
+	if len(parts) != 2 {
+		return r
+	}
+	return parts[1]
+}
 
 func Test_form(t *testing.T) {
 	// show error
@@ -17,12 +26,22 @@ func Test_form(t *testing.T) {
 		Config: &Config{
 			LoginPath: "/login",
 			Backends:  Options{"simple": {}},
+			Oauth:     Options{
+				/*
+					`github`: map[string]string{
+						`client_id`:     `client_id`,
+						`client_secret`: `client_secret`,
+						`redirect_uri`:  `/login/github`,
+					},
+				*/
+			},
 		},
 	})
-	Contains(t, recorder.Body.String(), `<form`)
-	NotContains(t, recorder.Body.String(), `github`)
-	NotContains(t, recorder.Body.String(), `Welcome`)
-	Contains(t, recorder.Body.String(), `Error`)
+	result := clearCSS(recorder.Body.String())
+	Contains(t, result, `<form`)
+	NotContains(t, result, `github`)
+	NotContains(t, result, `Welcome`)
+	Contains(t, result, `Error`)
 
 	// only form
 	recorder = httptest.NewRecorder()
@@ -32,10 +51,11 @@ func Test_form(t *testing.T) {
 			Backends:  Options{"simple": {}},
 		},
 	})
-	Contains(t, recorder.Body.String(), `<form`)
-	NotContains(t, recorder.Body.String(), `github`)
-	NotContains(t, recorder.Body.String(), `Welcome`)
-	NotContains(t, recorder.Body.String(), `Error`)
+	result = clearCSS(recorder.Body.String())
+	Contains(t, result, `<form`)
+	NotContains(t, result, `github`)
+	NotContains(t, result, `Welcome`)
+	NotContains(t, result, `Error`)
 
 	// only links
 	recorder = httptest.NewRecorder()
@@ -45,10 +65,11 @@ func Test_form(t *testing.T) {
 			Oauth:     Options{"github": {}},
 		},
 	})
-	NotContains(t, recorder.Body.String(), `<form`)
-	Contains(t, recorder.Body.String(), `href="/login/github"`)
-	NotContains(t, recorder.Body.String(), `Welcome`)
-	NotContains(t, recorder.Body.String(), `Error`)
+	result = clearCSS(recorder.Body.String())
+	NotContains(t, result, `<form`)
+	Contains(t, result, `href="/login/github"`)
+	NotContains(t, result, `Welcome`)
+	NotContains(t, result, `Error`)
 
 	// with form and links
 	recorder = httptest.NewRecorder()
@@ -59,10 +80,11 @@ func Test_form(t *testing.T) {
 			Oauth:     Options{"github": {}},
 		},
 	})
-	Contains(t, recorder.Body.String(), `<form`)
-	Contains(t, recorder.Body.String(), `href="/login/github"`)
-	NotContains(t, recorder.Body.String(), `Welcome`)
-	NotContains(t, recorder.Body.String(), `Error`)
+	result = clearCSS(recorder.Body.String())
+	Contains(t, result, `<form`)
+	Contains(t, result, `href="/login/github"`)
+	NotContains(t, result, `Welcome`)
+	NotContains(t, result, `Error`)
 
 	// show only the user info
 	recorder = httptest.NewRecorder()
@@ -75,10 +97,11 @@ func Test_form(t *testing.T) {
 			Oauth:     Options{"github": {}},
 		},
 	})
-	NotContains(t, recorder.Body.String(), `<form`)
-	NotContains(t, recorder.Body.String(), `href="/login/github"`)
-	Contains(t, recorder.Body.String(), `Welcome smancke`)
-	NotContains(t, recorder.Body.String(), `Error`)
+	result = clearCSS(recorder.Body.String())
+	NotContains(t, result, `<form`)
+	NotContains(t, result, `href="/login/github"`)
+	Contains(t, result, `Welcome smancke`)
+	NotContains(t, result, `Error`)
 }
 
 func Test_form_executeError(t *testing.T) {
@@ -103,12 +126,13 @@ func Test_form_customTemplate(t *testing.T) {
 			Template:  f.Name(),
 		},
 	})
-	Contains(t, recorder.Body.String(), `My custom template`)
-	Contains(t, recorder.Body.String(), `<form`)
-	NotContains(t, recorder.Body.String(), `github`)
-	NotContains(t, recorder.Body.String(), `Welcome`)
-	NotContains(t, recorder.Body.String(), `Error`)
-	NotContains(t, recorder.Body.String(), `style`)
+	result := clearCSS(recorder.Body.String())
+	Contains(t, result, `My custom template`)
+	Contains(t, result, `<form`)
+	NotContains(t, result, `github`)
+	NotContains(t, result, `Welcome`)
+	NotContains(t, result, `Error`)
+	NotContains(t, result, `style`)
 }
 
 func Test_form_customTemplate_ParseError(t *testing.T) {

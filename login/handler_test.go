@@ -387,13 +387,21 @@ func TestHandler_Logout(t *testing.T) {
 
 func checkDeleteCookei(t *testing.T, h http.Header) {
 	setCookieList := readSetCookies(h)
-	Equal(t, 1, len(setCookieList))
+	b, _ := json.Marshal(setCookieList)
+	t.Logf(`cookie: %s`, b)
+	Equal(t, 2, len(setCookieList))
 	cookie := setCookieList[0]
 
 	Equal(t, "jwt_token", cookie.Name)
 	Equal(t, "/", cookie.Path)
 	Equal(t, "example.com", cookie.Domain)
 	Equal(t, int64(0), cookie.Expires.Unix())
+
+	cookie2 := setCookieList[1]
+	Equal(t, "_gothic_session", cookie2.Name)
+	Equal(t, "/", cookie2.Path)
+	Equal(t, "", cookie2.Domain)
+	Equal(t, int64(1), cookie2.Expires.Unix())
 }
 
 func TestHandler_CustomLogoutURL(t *testing.T) {

@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/admpub/caddy v1.2.7
-	github.com/admpub/goth v0.0.2
+	github.com/admpub/goth v0.0.3
 	github.com/caddy-plugins/caddy-jwt/v3 v3.8.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/sessions v1.2.2
