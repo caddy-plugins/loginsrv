@@ -60,6 +60,7 @@ const envPrefix = "LOGINSRV_"
 type Config struct {
 	Host                   string
 	Port                   string
+	SiteURL                string
 	LogLevel               string
 	TextLogging            bool
 	JwtSecret              string

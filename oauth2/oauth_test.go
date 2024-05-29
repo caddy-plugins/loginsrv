@@ -65,6 +65,9 @@ func init() {
 	cookieStore = sessions.NewCookieStore([]byte(sessionSecret))
 	cookieStore.Options.HttpOnly = true
 	gothic.Store = cookieStore
+	Register(`faux`, func(cfg *Config) goth.Provider {
+		return &faux.Provider{}
+	})
 }
 
 func Test_StartFlow(t *testing.T) {

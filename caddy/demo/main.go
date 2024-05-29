@@ -22,6 +22,6 @@ func init() {
 		if len(hostURL) > 0 {
 			hostURL = strings.TrimSuffix(hostURL, `/`)
 		}
-		return nging.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI, hostURL, `profile`)
+		return nging.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI(), hostURL, `profile`)
 	})
 }

@@ -48,8 +48,13 @@ func (manager *Manager) Handle(w http.ResponseWriter, r *http.Request) (
 	userInfo model.UserInfo,
 	err error) {
 
-	if r.FormValue("error") != "" {
-		return false, false, model.UserInfo{}, fmt.Errorf("error: %v", r.FormValue("error"))
+	errMsg := r.FormValue("error")
+	if errMsg != "" {
+		description := r.FormValue("error_description")
+		if len(description) > 0 {
+			errMsg = description
+		}
+		return false, false, model.UserInfo{}, errors.New(errMsg)
 	}
 
 	cfg, err := manager.GetConfigFromRequest(r)
@@ -78,8 +83,8 @@ func (manager *Manager) GetConfigFromRequest(r *http.Request) (*Config, error) {
 		return nil, fmt.Errorf("no oauth configuration for %v", configName)
 	}
 
-	if len(cfg.RedirectURI) == 0 {
-		cfg.RedirectURI = redirectURIFromRequest(r)
+	if len(cfg.GetRedirectURI()) == 0 {
+		cfg.SetRedirectURI(redirectURIFromRequest(r))
 	}
 
 	if cfg.Provider == nil {
@@ -98,6 +103,9 @@ func (manager *Manager) getConfigNameFromPath(path string) string {
 
 // AddConfig for a provider
 func (manager *Manager) AddConfig(providerName string, opts map[string]string) error {
+	if _, ok := constructors[providerName]; !ok {
+		return fmt.Errorf(`no provider for name %s`, providerName)
+	}
 	cfg := &Config{
 		ProviderName: providerName,
 	}
@@ -123,16 +131,17 @@ func (manager *Manager) AddConfig(providerName string, opts map[string]string) e
 	if len(cfg.ClientSecret) == 0 {
 		return errMissingParameterClientSecret
 	}
-
-	p, err := goth.GetProvider(providerName)
-	if err != nil {
-		p, err = cfg.NewProvider()
+	if len(cfg.RedirectURI) > 0 {
+		p, err := goth.GetProvider(providerName)
 		if err != nil {
-			return err
+			p, err = cfg.NewProvider()
+			if err != nil {
+				return err
+			}
 		}
-	}
 
-	cfg.Provider = p
+		cfg.Provider = p
+	}
 	manager.configs[providerName] = cfg
 	return nil
 }

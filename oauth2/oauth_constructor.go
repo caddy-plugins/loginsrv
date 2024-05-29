@@ -16,34 +16,34 @@ import (
 
 var constructors = map[string]func(*Config) goth.Provider{
 	`gitea`: func(cfg *Config) goth.Provider {
-		return gitea.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI, cfg.GetScopes()...)
+		return gitea.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI(), cfg.GetScopes()...)
 	},
 	`google`: func(cfg *Config) goth.Provider {
-		return google.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI)
+		return google.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI())
 	},
 	`github`: func(cfg *Config) goth.Provider {
-		return github.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI, cfg.GetScopes()...)
+		return github.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI(), cfg.GetScopes()...)
 	},
 	`bitbucket`: func(cfg *Config) goth.Provider {
-		return bitbucket.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI, cfg.GetScopes()...)
+		return bitbucket.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI(), cfg.GetScopes()...)
 	},
 	`gitlab`: func(cfg *Config) goth.Provider {
-		return gitlab.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI)
+		return gitlab.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI())
 	},
 	`salesforce`: func(cfg *Config) goth.Provider {
-		return salesforce.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI, cfg.GetScopes()...)
+		return salesforce.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI(), cfg.GetScopes()...)
 	},
 	`yahoo`: func(cfg *Config) goth.Provider {
-		return yahoo.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI, cfg.GetScopes()...)
+		return yahoo.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI(), cfg.GetScopes()...)
 	},
 	`stripe`: func(cfg *Config) goth.Provider {
-		return stripe.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI, cfg.GetScopes()...)
+		return stripe.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI(), cfg.GetScopes()...)
 	},
 	`paypal`: func(cfg *Config) goth.Provider {
-		return paypal.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI, cfg.GetScopes()...)
+		return paypal.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI(), cfg.GetScopes()...)
 	},
 	`wechat`: func(cfg *Config) goth.Provider {
-		return wechat.New(cfg.ClientID, cfg.ClientSecret, cfg.RedirectURI, wechat.WECHAT_LANG_CN)
+		return wechat.New(cfg.ClientID, cfg.ClientSecret, cfg.GetRedirectURI(), wechat.WECHAT_LANG_CN)
 	},
 }
 

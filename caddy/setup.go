@@ -11,8 +11,10 @@ import (
 	"github.com/admpub/caddy"
 	"github.com/admpub/caddy/caddyhttp/httpserver"
 	"github.com/admpub/goth"
+	"github.com/admpub/pp"
 	"github.com/caddy-plugins/loginsrv/logging"
 	"github.com/caddy-plugins/loginsrv/login"
+	"github.com/webx-top/com"
 
 	// Import all backends, packaged with the caddy plugin
 	_ "github.com/caddy-plugins/loginsrv/htpasswd"
@@ -28,10 +30,47 @@ func init() {
 	})
 }
 
+func dump(a ...interface{}) {
+	pp.Println(a...)
+}
+
+func getSiteURL(c *caddy.Controller) string {
+	var siteURL string
+	if len(c.ServerBlockKeys) > 0 {
+		addrs := make([]string, len(c.ServerBlockKeys))
+		for index, addr := range c.ServerBlockKeys {
+			parsedValue := com.ParseEnvVar(addr)
+			currentHost := `127.0.0.1`
+			if len(parsedValue) > 0 {
+				switch {
+				case parsedValue[0] == ':':
+					addr = `http://` + currentHost + parsedValue
+				case strings.HasPrefix(parsedValue, `0.0.0.0:`):
+					addr = `http://` + currentHost + strings.TrimPrefix(parsedValue, `0.0.0.0`)
+				case !strings.Contains(parsedValue, `//`):
+					addr = `http://` + parsedValue
+				default:
+					addr = strings.ReplaceAll(parsedValue, `*`, `test`)
+				}
+			}
+			if strings.HasPrefix(addr, `https://`) {
+				siteURL = addr
+				break
+			}
+			addrs[index] = addr
+		}
+		if len(siteURL) == 0 {
+			siteURL = addrs[0]
+		}
+	}
+	return siteURL
+}
+
 // setup configures a new loginsrv instance.
 func setup(c *caddy.Controller) error {
 	logging.Set("info", true)
 	goth.ClearProviders()
+	//dump(c)
 	for c.Next() {
 		args := c.RemainingArgs()
 
@@ -49,6 +88,9 @@ func setup(c *caddy.Controller) error {
 			config.LoginPath = path.Join(args[0], "/login")
 		}
 
+		// if len(config.SiteURL) == 0 {
+		// 	config.SiteURL = siteURL
+		// }
 		loginHandler, err := login.NewHandler(config)
 		if err != nil {
 			return err

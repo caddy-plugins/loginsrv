@@ -89,6 +89,7 @@ func Test_Manager_NoAauthOnWrongCode(t *testing.T) {
 	m.AddConfig(exampleProvider.Name(), map[string]string{
 		"client_id":     "foo",
 		"client_secret": "bar",
+		"redirect_uri":  "http://example.com/login/" + exampleProvider.Name(),
 	})
 
 	m.authenticate = func(cfg *Config, w http.ResponseWriter, r *http.Request) (model.UserInfo, error) {

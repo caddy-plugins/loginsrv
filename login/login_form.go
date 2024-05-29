@@ -100,7 +100,11 @@ var layout = `<!DOCTYPE html>
 
             {{- if .Error -}}
               <div class="alert alert-danger" role="alert">
+			  	{{- if .Reason -}}
+				<strong>Error:</strong> {{.Reason}}
+				{{- else -}}
                 <strong>Internal Error. </strong> Please try again later.
+				{{- end -}}
               </div>
             {{end -}}
 
@@ -122,6 +126,7 @@ var layout = `<!DOCTYPE html>
 
 type loginFormData struct {
 	Error         bool
+	Reason        string
 	Failure       bool
 	Config        *Config
 	Authenticated bool

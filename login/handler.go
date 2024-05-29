@@ -57,10 +57,10 @@ func NewHandler(config *Config) (*Handler, error) {
 	}
 
 	oauth := oauth2.NewManager()
-	defaultRedirectURI := config.LoginPath
 	for providerName, opts := range config.Oauth {
-		if ru, ok := opts[`redirect_uri`]; !ok || len(ru) == 0 {
-			opts[`redirect_uri`] = path.Join(defaultRedirectURI, providerName)
+		if ru, ok := opts[`redirect_uri`]; (!ok || len(ru) == 0) && len(config.SiteURL) > 0 {
+			opts[`redirect_uri`] = config.SiteURL + path.Join(config.LoginPath, providerName)
+			//fmt.Println(opts[`redirect_uri`])
 		}
 		err := oauth.AddConfig(providerName, opts)
 		if err != nil {
@@ -108,7 +108,7 @@ func (h *Handler) handleOauth(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logging.Application(r.Header).WithError(err).Error()
-		h.respondError(w, r)
+		h.respondError(w, r, err.Error())
 		return
 	}
 
@@ -361,15 +361,18 @@ func (h *Handler) signingInfo() (signingMethod jwt.SigningMethod, key, verifyKey
 	return h.signingMethod, h.signingKey, h.signingVerifyKey, nil
 }
 
-func (h *Handler) respondError(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) respondError(w http.ResponseWriter, r *http.Request, reason ...string) {
 	if wantHTML(r) {
 		username, _, _ := getCredentials(r)
-		writeLoginForm(w,
-			loginFormData{
-				Error:    true,
-				Config:   h.config,
-				UserInfo: model.UserInfo{Sub: username},
-			})
+		data := loginFormData{
+			Error:    true,
+			Config:   h.config,
+			UserInfo: model.UserInfo{Sub: username},
+		}
+		if len(reason) > 0 {
+			data.Reason = reason[0]
+		}
+		writeLoginForm(w, data)
 		return
 	}
 	w.Header().Set("Content-Type", contentTypePlain)
@@ -377,32 +380,35 @@ func (h *Handler) respondError(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Internal Server Error")
 }
 
-func (h *Handler) respondBadRequest(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) respondBadRequest(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(400)
 	fmt.Fprintf(w, "Bad Request: Method or content-type not supported")
 }
 
-func (h *Handler) respondNotFound(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) respondNotFound(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(404)
 	fmt.Fprintf(w, "Not Found: The requested page does not exist")
 }
 
-func (h *Handler) respondMaxRefreshesReached(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) respondMaxRefreshesReached(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(403)
 	fmt.Fprint(w, "Max JWT refreshes reached")
 }
 
-func (h *Handler) respondAuthFailure(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) respondAuthFailure(w http.ResponseWriter, r *http.Request, reason ...string) {
 	if wantHTML(r) {
 		w.Header().Set("Content-Type", contentTypeHTML)
 		w.WriteHeader(403)
 		username, _, _ := getCredentials(r)
-		writeLoginForm(w,
-			loginFormData{
-				Failure:  true,
-				Config:   h.config,
-				UserInfo: model.UserInfo{Sub: username},
-			})
+		data := loginFormData{
+			Failure:  true,
+			Config:   h.config,
+			UserInfo: model.UserInfo{Sub: username},
+		}
+		if len(reason) > 0 {
+			data.Reason = reason[0]
+		}
+		writeLoginForm(w, data)
 		return
 	}
 

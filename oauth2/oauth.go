@@ -24,6 +24,7 @@ type Config struct {
 	// RedirectURL is the URL to redirect users going through
 	// the OAuth flow, after the resource owner's URLs.
 	RedirectURI string
+	muR         sync.RWMutex
 
 	// Scope specifies optional requested permissions, this is a *space* separated list.
 	Scope string
@@ -34,6 +35,20 @@ type Config struct {
 	Provider     goth.Provider
 	mu           sync.RWMutex
 	ProviderName string
+}
+
+func (cfg *Config) SetRedirectURI(redirectURI string) *Config {
+	cfg.muR.Lock()
+	cfg.RedirectURI = redirectURI
+	cfg.muR.Unlock()
+	return cfg
+}
+
+func (cfg *Config) GetRedirectURI() string {
+	cfg.muR.RLock()
+	redirectURI := cfg.RedirectURI
+	cfg.muR.RUnlock()
+	return redirectURI
 }
 
 func (cfg *Config) SetProvider(provider goth.Provider) *Config {
