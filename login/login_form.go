@@ -33,7 +33,12 @@ const partials = `
 .login-or-hr {margin-bottom: 0;position: relative;top: 28px;height: 0;border: 0;border-top: 1px solid #e4e6e8;}
 .login-or {display: inline-block;position: relative;padding: 10px;background-color: #FFF;}
 .login-picture {height: 120px;border-radius: 3px;margin-bottom: 10px;box-shadow: 0 0 5px #ccc;}
-</style>
+@media (prefers-color-scheme: dark) {
+body,.login-or{background-color:#111;}.login-or-hr{border-color:#444}body{color:#aaa}
+.panel-default{border-color:#333}.panel{background-color:#333}..login-or-container{color:#888}
+.panel-default>.panel-heading{color: #fff;background-color: #555;border-color: #333;}
+.form-control{background-color: #000;border-color:#333;color:#f1f1f1}
+}</style>
 {{- end -}}
 
 {{- define "userInfo" -}}
@@ -66,10 +71,10 @@ const partials = `
   	          <div class="panel-heading">  
   		    <div class="panel-title">
   		      <h4>Sign in</h4>
-                      {{- if .Failure}}<div class="alert alert-warning" role="alert">Invalid credentials</div>{{- end -}} 
 		    </div>
 	          </div>
 	          <div class="panel-body">
+			  {{- if .Failure}}<div class="alert alert-warning" role="alert">Invalid credentials</div>{{- end -}} 
 		    <form accept-charset="UTF-8" role="form" method="POST" action="{{.Config.LoginPath}}">
                 <fieldset>
 		        <div class="form-group">
