@@ -46,7 +46,7 @@ func (c *Client) GetTokenByPassword(username, password string, scopes ...string)
 	if err != nil {
 		return false, nil, err
 	}
-
+	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return false, nil, err

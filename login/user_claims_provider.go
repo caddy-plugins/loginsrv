@@ -2,7 +2,6 @@ package login
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -44,10 +43,7 @@ func (provider *userClaimsProvider) Claims(userInfo model.UserInfo) (jwt.Claims,
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		io.ReadAll(resp.Body)
-		resp.Body.Close()
-	}()
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return customClaims(userInfo.AsMap()), nil
