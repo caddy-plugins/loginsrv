@@ -8,6 +8,7 @@ import (
 // UserInfo holds the parameters returned by the backends.
 // This information will be serialized to build the JWT token contents.
 type UserInfo struct {
+	ID        string   `json:"id,omitempty"`
 	Sub       string   `json:"sub"`
 	Picture   string   `json:"picture,omitempty"`
 	Name      string   `json:"name,omitempty"`
@@ -31,6 +32,9 @@ func (u UserInfo) Valid() error {
 func (u UserInfo) AsMap() map[string]interface{} {
 	m := map[string]interface{}{
 		"sub": u.Sub,
+	}
+	if u.ID != "" {
+		m["id"] = u.ID
 	}
 	if u.Picture != "" {
 		m["picture"] = u.Picture

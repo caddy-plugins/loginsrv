@@ -109,9 +109,10 @@ func Authenticate(cfg *Config, w http.ResponseWriter, r *http.Request) (model.Us
 		return model.UserInfo{}, err
 	}
 	return model.UserInfo{
+		ID:      user.UserID,
 		Sub:     user.Name,
 		Picture: user.AvatarURL,
-		Name:    user.NickName,
+		Name:    user.Name,
 		Email:   user.Email,
 		Origin:  user.Provider,
 	}, nil

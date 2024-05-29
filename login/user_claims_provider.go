@@ -71,6 +71,9 @@ func (provider *userClaimsProvider) buildURL(userInfo model.UserInfo) string {
 	query := u.Query()
 
 	query.Add("sub", url.QueryEscape(userInfo.Sub))
+	if userInfo.ID != "" {
+		query.Add("id", url.QueryEscape(userInfo.ID))
+	}
 	if userInfo.Origin != "" {
 		query.Add("origin", url.QueryEscape(userInfo.Origin))
 	}
