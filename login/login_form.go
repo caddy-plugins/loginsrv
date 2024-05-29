@@ -32,7 +32,7 @@ const partials = `
 .login-or-container {text-align: center;margin: 0;margin-bottom: 10px;clear: both;color: #6a737c;font-variant: small-caps;}
 .login-or-hr {margin-bottom: 0;position: relative;top: 28px;height: 0;border: 0;border-top: 1px solid #e4e6e8;}
 .login-or {display: inline-block;position: relative;padding: 10px;background-color: #FFF;}
-.login-picture {height: 120px;border-radius: 3px;margin-bottom: 10px;}
+.login-picture {height: 120px;border-radius: 3px;margin-bottom: 10px;box-shadow: 0 0 5px #ccc;}
 </style>
 {{- end -}}
 
