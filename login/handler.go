@@ -248,7 +248,7 @@ func (h *Handler) respondAuthenticated(w http.ResponseWriter, r *http.Request, u
 	token, err := h.createToken(userInfo)
 	if err != nil {
 		logging.Application(r.Header).WithError(err).Error()
-		h.respondError(w, r)
+		h.respondError(w, r, err.Error())
 		return
 	}
 

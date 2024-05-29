@@ -2,6 +2,7 @@ package login
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -33,7 +34,7 @@ func (provider *userClaimsProvider) Claims(userInfo model.UserInfo) (jwt.Claims,
 	claimsURL := provider.buildURL(userInfo)
 	req, err := http.NewRequest(http.MethodGet, claimsURL, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`failed to request the user claims API(%s): %w`, provider.url, err)
 	}
 	if provider.auth != "" {
 		req.Header.Add("Authorization", "Bearer "+provider.auth)
@@ -41,7 +42,7 @@ func (provider *userClaimsProvider) Claims(userInfo model.UserInfo) (jwt.Claims,
 
 	resp, err := provider.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`failed to request the user claims API(%s): %w`, provider.url, err)
 	}
 	defer resp.Body.Close()
 
@@ -57,7 +58,7 @@ func (provider *userClaimsProvider) Claims(userInfo model.UserInfo) (jwt.Claims,
 	remoteClaims := map[string]interface{}{}
 	err = decoder.Decode(&remoteClaims)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(`failed to decode the user claims(%s): %w`, provider.url, err)
 	}
 
 	return mergeClaims(userInfo, remoteClaims), nil
