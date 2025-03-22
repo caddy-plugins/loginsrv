@@ -23,7 +23,6 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute v1.35.0 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	gitee.com/admpub/certmagic v0.8.9 // indirect
 	github.com/admpub/fsnotify v1.7.0 // indirect
@@ -36,7 +35,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
-	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/pprof v0.0.0-20250317173921-a4b03ec1a45e // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect

@@ -43,7 +43,7 @@ body,.login-or{background-color:#111;}.login-or-hr{border-color:#444}body{color:
 
 {{- define "userInfo" -}}
               {{- with .UserInfo -}}
-                <h1>Welcome {{.Sub}}!</h1>
+                <h1>Welcome {{.Subject}}!</h1>
                 <br/>
                 {{if .Picture}}<img class="login-picture" src="{{.Picture}}?s=120">{{end -}}
                 {{if .Name}}<h3>{{.Name}}</h3>{{end -}}
@@ -78,7 +78,7 @@ body,.login-or{background-color:#111;}.login-or-hr{border-color:#444}body{color:
 		    <form accept-charset="UTF-8" role="form" method="POST" action="{{.Config.LoginPath}}">
                 <fieldset>
 		        <div class="form-group">
-		          <input class="form-control" placeholder="Username" name="username" value="{{.UserInfo.Sub}}" type="text">
+		          <input class="form-control" placeholder="Username" name="username" value="{{.UserInfo.Subject}}" type="text">
 		        </div>
 		        <div class="form-group">
 		          <input class="form-control" placeholder="Password" name="password" type="password" value="">
