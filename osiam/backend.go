@@ -3,8 +3,10 @@ package osiam
 import (
 	"errors"
 	"fmt"
-	"github.com/caddy-plugins/loginsrv/model"
 	"net/url"
+
+	"github.com/caddy-plugins/loginsrv/model"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Backend is the osiam authentication backend.
@@ -37,8 +39,10 @@ func (b *Backend) Authenticate(username, password string) (bool, model.UserInfo,
 		return authenticated, model.UserInfo{}, err
 	}
 	userInfo := model.UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: username,
+		},
 		Origin: OsiamProviderName,
-		Sub:    username,
 	}
 	return true, userInfo, nil
 }

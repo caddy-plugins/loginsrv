@@ -12,7 +12,7 @@ import (
 	"github.com/caddy-plugins/loginsrv/logging"
 	"github.com/caddy-plugins/loginsrv/model"
 	"github.com/caddy-plugins/loginsrv/oauth2"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 )
 
@@ -114,12 +114,12 @@ func (h *Handler) handleOauth(w http.ResponseWriter, r *http.Request) {
 
 	if authenticated {
 		logging.Application(r.Header).
-			WithField("username", userInfo.Sub).Info("successfully authenticated")
+			WithField("username", userInfo.Subject).Info("successfully authenticated")
 		h.respondAuthenticated(w, r, userInfo)
 		return
 	}
 	logging.Application(r.Header).
-		WithField("username", userInfo.Sub).Info("failed authentication")
+		WithField("username", userInfo.Subject).Info("failed authentication")
 
 	h.respondAuthFailure(w, r)
 }
@@ -224,7 +224,7 @@ func (h *Handler) handleRefresh(w http.ResponseWriter, r *http.Request, userInfo
 	} else {
 		userInfo.Refreshes++
 		h.respondAuthenticated(w, r, userInfo)
-		logging.Application(r.Header).WithField("username", userInfo.Sub).Info("refreshed jwt")
+		logging.Application(r.Header).WithField("username", userInfo.Subject).Info("refreshed jwt")
 	}
 }
 
@@ -244,7 +244,7 @@ func (h *Handler) deleteToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) respondAuthenticated(w http.ResponseWriter, r *http.Request, userInfo model.UserInfo) {
-	userInfo.Expiry = time.Now().Add(h.config.JwtExpiry).Unix()
+	userInfo.ExpiresAt = jwt.NewNumericDate(time.Now().Add(h.config.JwtExpiry))
 	token, err := h.createToken(userInfo)
 	if err != nil {
 		logging.Application(r.Header).WithError(err).Error()
@@ -367,7 +367,7 @@ func (h *Handler) respondError(w http.ResponseWriter, r *http.Request, reason ..
 		data := loginFormData{
 			Error:    true,
 			Config:   h.config,
-			UserInfo: model.UserInfo{Sub: username},
+			UserInfo: model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: username}},
 		}
 		if len(reason) > 0 {
 			data.Reason = reason[0]
@@ -403,7 +403,7 @@ func (h *Handler) respondAuthFailure(w http.ResponseWriter, r *http.Request, rea
 		data := loginFormData{
 			Failure:  true,
 			Config:   h.config,
-			UserInfo: model.UserInfo{Sub: username},
+			UserInfo: model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: username}},
 		}
 		if len(reason) > 0 {
 			data.Reason = reason[0]

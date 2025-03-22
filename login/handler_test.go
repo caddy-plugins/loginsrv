@@ -18,7 +18,7 @@ import (
 
 	"github.com/caddy-plugins/loginsrv/model"
 	"github.com/caddy-plugins/loginsrv/oauth2"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	. "github.com/stretchr/testify/assert"
 )
 
@@ -182,7 +182,7 @@ func TestHandler_HandleOauth(t *testing.T) {
 		authenticated bool,
 		userInfo model.UserInfo,
 		err error) {
-		return false, true, model.UserInfo{Sub: "marvin"}, nil
+		return false, true, model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "marvin"}}, nil
 	}
 	recorder = httptest.NewRecorder()
 	handler.ServeHTTP(recorder, req("GET", "/login/github", ""))
@@ -289,7 +289,7 @@ func TestHandler_SetSecureCookie(t *testing.T) {
 
 func TestHandler_Refresh(t *testing.T) {
 	h := testHandler()
-	input := model.UserInfo{Sub: "bob", Expiry: time.Now().Add(time.Second).Unix()}
+	input := model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "bob", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second))}}
 	token, err := h.createToken(input)
 	NoError(t, err)
 
@@ -319,7 +319,12 @@ func TestHandler_Refresh(t *testing.T) {
 
 func TestHandler_Refresh_Expired(t *testing.T) {
 	h := testHandler()
-	input := model.UserInfo{Sub: "bob", Expiry: time.Now().Unix() - 1}
+	input := model.UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   "bob",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-time.Second)),
+		},
+	}
 	token, err := h.createToken(input)
 	NoError(t, err)
 
@@ -350,7 +355,7 @@ func TestHandler_Refresh_Invalid_Token(t *testing.T) {
 
 func TestHandler_Refresh_Max_Refreshes_Reached(t *testing.T) {
 	h := testHandler()
-	input := model.UserInfo{Sub: "bob", Expiry: time.Now().Add(time.Second).Unix(), Refreshes: 1}
+	input := model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "bob", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second))}, Refreshes: 1}
 	token, err := h.createToken(input)
 	NoError(t, err)
 
@@ -457,7 +462,7 @@ func TestHandler_LoginWithEmptyUsername(t *testing.T) {
 
 func TestHandler_getToken_Valid(t *testing.T) {
 	h := testHandler()
-	input := model.UserInfo{Sub: "marvin", Expiry: time.Now().Add(time.Second).Unix()}
+	input := model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "marvin", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second))}}
 	token, err := h.createToken(input)
 	NoError(t, err)
 	r := &http.Request{
@@ -470,7 +475,7 @@ func TestHandler_getToken_Valid(t *testing.T) {
 
 func TestHandler_ReturnUserInfoJSON(t *testing.T) {
 	h := testHandler()
-	input := model.UserInfo{Sub: "marvin", Expiry: time.Now().Add(time.Second).Unix()}
+	input := model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "marvin", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second))}}
 	token, err := h.createToken(input)
 	NoError(t, err)
 	url, _ := url.Parse("/context/login")
@@ -517,7 +522,7 @@ func TestHandler_signAndVerify_ES256(t *testing.T) {
 	h := testHandler()
 	h.config.JwtAlgo = "ES256"
 	h.config.JwtSecret = "MHcCAQEEIJKMecdA9ASkZArOu9b+cPmSiVfQaaeErHcvkqG2gVIOoAoGCCqGSM49AwEHoUQDQgAE1gae9/zJDLHeuFteUkKgVhLrwJPoA43goNacgwldOucBvVUzD0EFAcpCR+0UcOfQ99CxUyKxWtnvr9xpDIXU0w=="
-	input := model.UserInfo{Sub: "marvin", Expiry: time.Now().Add(time.Second).Unix()}
+	input := model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "marvin", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second))}}
 	token, err := h.createToken(input)
 	NoError(t, err)
 	r := &http.Request{
@@ -551,7 +556,7 @@ func TestHandler_signAndVerify_RSA(t *testing.T) {
 			h.config.JwtAlgo = jwtAlgo
 			h.config.JwtSecret = string(pem.EncodeToMemory(privateKey))
 
-			input := model.UserInfo{Sub: "marvin", Expiry: time.Now().Add(time.Second).Unix()}
+			input := model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "marvin", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second))}}
 			token, err := h.createToken(input)
 			NoError(t, err)
 			r := &http.Request{
@@ -581,7 +586,7 @@ func TestHandler_signAndVerify_RSA(t *testing.T) {
 			"B98MVgavesDPtyFQE8ECQCRZaTDF4d5KBAvu5ogoqEATD5r21V4Zj5uZ/QSeI7+v" +
 			"UVncBYg6g4CIrczoqYpJ3aBF5MVJ0FEU9XCDO/iDvCU="
 
-		input := model.UserInfo{Sub: "marvin", Expiry: time.Now().Add(time.Second).Unix()}
+		input := model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "marvin", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second))}}
 		token, err := h.createToken(input)
 		NoError(t, err)
 		r := &http.Request{
@@ -597,7 +602,7 @@ func TestHandler_signAndVerify_RSA(t *testing.T) {
 		h.config.JwtAlgo = "RS256"
 		h.config.JwtSecret = "-garbage-"
 
-		input := model.UserInfo{Sub: "marvin", Expiry: time.Now().Add(time.Second).Unix()}
+		input := model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "marvin", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second))}}
 		_, err := h.createToken(input)
 		Error(t, err)
 	})
@@ -605,7 +610,7 @@ func TestHandler_signAndVerify_RSA(t *testing.T) {
 
 func TestHandler_getToken_InvalidSecret(t *testing.T) {
 	h := testHandler()
-	input := model.UserInfo{Sub: "marvin"}
+	input := model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "marvin"}}
 	token, err := h.createToken(input)
 	NoError(t, err)
 	r := &http.Request{
@@ -635,9 +640,9 @@ func TestHandler_getToken_InvalidNoToken(t *testing.T) {
 
 func TestHandler_getToken_WithUserClaims(t *testing.T) {
 	h := testHandler()
-	input := model.UserInfo{Sub: "marvin", Expiry: time.Now().Add(time.Second).Unix()}
+	input := model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "marvin", ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second))}}
 	h.userClaims = func(userInfo model.UserInfo) (jwt.Claims, error) {
-		return customClaims{"sub": "Zappod", "origin": "fake", "exp": userInfo.Expiry}, nil
+		return jwt.MapClaims{"sub": "Zappod", "origin": "fake", "exp": userInfo.ExpiresAt.Unix()}, nil
 	}
 	token, err := h.createToken(input)
 
@@ -647,7 +652,7 @@ func TestHandler_getToken_WithUserClaims(t *testing.T) {
 	}
 	userInfo, valid := h.GetToken(r)
 	True(t, valid)
-	Equal(t, "Zappod", userInfo.Sub)
+	Equal(t, "Zappod", userInfo.Subject)
 	Equal(t, "fake", userInfo.Origin)
 }
 

@@ -2,9 +2,11 @@ package htpasswd
 
 import (
 	"errors"
+	"strings"
+
 	"github.com/caddy-plugins/loginsrv/login"
 	"github.com/caddy-plugins/loginsrv/model"
-	"strings"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // ProviderName const
@@ -54,8 +56,10 @@ func (sb *Backend) Authenticate(username, password string) (bool, model.UserInfo
 	authenticated, err := sb.auth.Authenticate(username, password)
 	if authenticated && err == nil {
 		return authenticated, model.UserInfo{
+			RegisteredClaims: jwt.RegisteredClaims{
+				Subject: username,
+			},
 			Origin: ProviderName,
-			Sub:    username,
 		}, err
 	}
 	return false, model.UserInfo{}, err

@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/caddy-plugins/loginsrv/model"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 )
 
-type customClaims map[string]interface{}
+type customClaims jwt.MapClaims
 
 func (custom customClaims) Valid() error {
 	if exp, ok := custom["exp"]; ok {

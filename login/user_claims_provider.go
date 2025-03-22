@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/caddy-plugins/loginsrv/model"
-	jwt "github.com/golang-jwt/jwt/v4"
+	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 )
 
@@ -47,7 +47,7 @@ func (provider *userClaimsProvider) Claims(userInfo model.UserInfo) (jwt.Claims,
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return customClaims(userInfo.AsMap()), nil
+		return userInfo, nil
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.Errorf("bad http response code %d", resp.StatusCode)
@@ -61,7 +61,7 @@ func (provider *userClaimsProvider) Claims(userInfo model.UserInfo) (jwt.Claims,
 		return nil, fmt.Errorf(`failed to decode the user claims(%s): %w`, provider.url, err)
 	}
 
-	return mergeClaims(userInfo, remoteClaims), nil
+	return jwt.MapClaims(mergeClaims(userInfo, remoteClaims)), nil
 }
 
 func (provider *userClaimsProvider) buildURL(userInfo model.UserInfo) string {
@@ -70,7 +70,7 @@ func (provider *userClaimsProvider) buildURL(userInfo model.UserInfo) string {
 
 	query := u.Query()
 
-	query.Add("sub", url.QueryEscape(userInfo.Sub))
+	query.Add("sub", url.QueryEscape(userInfo.Subject))
 	if userInfo.ID != "" {
 		query.Add("id", url.QueryEscape(userInfo.ID))
 	}

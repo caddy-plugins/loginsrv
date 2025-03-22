@@ -10,13 +10,17 @@ import (
 	"github.com/admpub/goth"
 	"github.com/admpub/goth/providers/faux"
 	"github.com/caddy-plugins/loginsrv/model"
+	"github.com/golang-jwt/jwt/v5"
 	. "github.com/stretchr/testify/assert"
 )
 
 func Test_Manager_Positive_Flow(t *testing.T) {
 	var startFlowCalled, authenticateCalled bool
 	var startFlowReceivedConfig, authenticateReceivedConfig *Config
-	expectedUser := model.UserInfo{Sub: "testUser"}
+	expectedUser := model.UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: "testUser",
+		}}
 
 	exampleProvider := &faux.Provider{}
 	goth.UseProviders(exampleProvider)
@@ -73,7 +77,9 @@ func Test_Manager_Positive_Flow(t *testing.T) {
 	NoError(t, err)
 	False(t, startedFlow)
 	True(t, authenticated)
-	Equal(t, model.UserInfo{Sub: expectedUser.Sub}, userInfo)
+	Equal(t, model.UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: expectedUser.Subject}}, userInfo)
 	True(t, authenticateCalled)
 	assertEqualConfig(t, expectedConfig, authenticateReceivedConfig)
 }

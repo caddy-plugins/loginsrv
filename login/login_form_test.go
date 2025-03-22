@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/caddy-plugins/loginsrv/model"
+	"github.com/golang-jwt/jwt/v5"
 	. "github.com/stretchr/testify/assert"
 )
 
@@ -90,7 +91,7 @@ func Test_form(t *testing.T) {
 	recorder = httptest.NewRecorder()
 	writeLoginForm(recorder, loginFormData{
 		Authenticated: true,
-		UserInfo:      model.UserInfo{Sub: "smancke", Name: "Sebastian Mancke"},
+		UserInfo:      model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "smancke"}, Name: "Sebastian Mancke"},
 		Config: &Config{
 			LoginPath: "/login",
 			Backends:  Options{"simple": {}},

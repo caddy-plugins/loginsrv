@@ -83,17 +83,17 @@ func TestSimpleBackend_Authenticate(t *testing.T) {
 
 	authenticated, userInfo, err := backend.Authenticate("bob-bcrypt", "secret")
 	True(t, authenticated)
-	Equal(t, "bob-bcrypt", userInfo.Sub)
+	Equal(t, "bob-bcrypt", userInfo.Subject)
 	NoError(t, err)
 
 	authenticated, userInfo, err = backend.Authenticate("bob-bcrypt", "fooo")
 	False(t, authenticated)
-	Equal(t, "", userInfo.Sub)
+	Equal(t, "", userInfo.Subject)
 	NoError(t, err)
 
 	authenticated, userInfo, err = backend.Authenticate("", "")
 	False(t, authenticated)
-	Equal(t, "", userInfo.Sub)
+	Equal(t, "", userInfo.Subject)
 	NoError(t, err)
 }
 

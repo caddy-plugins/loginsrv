@@ -1,8 +1,9 @@
 package login
 
 import (
-	. "github.com/stretchr/testify/assert"
 	"testing"
+
+	. "github.com/stretchr/testify/assert"
 )
 
 func TestSetup(t *testing.T) {
@@ -29,16 +30,16 @@ func TestSimpleBackend_Authenticate(t *testing.T) {
 
 	authenticated, userInfo, err := backend.Authenticate("bob", "secret")
 	True(t, authenticated)
-	Equal(t, "bob", userInfo.Sub)
+	Equal(t, "bob", userInfo.Subject)
 	NoError(t, err)
 
 	authenticated, userInfo, err = backend.Authenticate("bob", "fooo")
 	False(t, authenticated)
-	Equal(t, "", userInfo.Sub)
+	Equal(t, "", userInfo.Subject)
 	NoError(t, err)
 
 	authenticated, userInfo, err = backend.Authenticate("", "")
 	False(t, authenticated)
-	Equal(t, "", userInfo.Sub)
+	Equal(t, "", userInfo.Subject)
 	NoError(t, err)
 }

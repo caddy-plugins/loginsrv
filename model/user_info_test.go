@@ -5,23 +5,30 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	. "github.com/stretchr/testify/assert"
 )
 
 func Test_UserInfo_Valid(t *testing.T) {
-	Error(t, UserInfo{Expiry: 0}.Valid())
-	Error(t, UserInfo{Expiry: time.Now().Add(-1 * time.Second).Unix()}.Valid())
-	NoError(t, UserInfo{Expiry: time.Now().Add(time.Second).Unix()}.Valid())
+	Error(t, UserInfo{RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(time.Time{})}}.Valid())
+	Error(t, UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Second)),
+		},
+	}.Valid())
+	NoError(t, UserInfo{RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second))}}.Valid())
 }
 
 func Test_UserInfo_AsMap(t *testing.T) {
 	u := UserInfo{
-		Sub:       `json:"sub"`,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   `json:"sub"`,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-time.Second)),
+		},
 		Picture:   `json:"picture,omitempty"`,
 		Name:      `json:"name,omitempty"`,
 		Email:     `json:"email,omitempty"`,
 		Origin:    `json:"origin,omitempty"`,
-		Expiry:    23,
 		Refreshes: 42,
 		Domain:    `json:"domain,omitempty"`,
 		Groups:    []string{`json:"groups,omitempty"`},
@@ -36,7 +43,9 @@ func Test_UserInfo_AsMap(t *testing.T) {
 
 func Test_UserInfo_AsMap_Minimal(t *testing.T) {
 	u := UserInfo{
-		Sub: `json:"sub"`,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: `json:"sub"`,
+		},
 	}
 
 	givenJson, _ := json.Marshal(u.AsMap())

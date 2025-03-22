@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/caddy-plugins/loginsrv/model"
-	jwt "github.com/golang-jwt/jwt/v4"
+	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -54,14 +54,14 @@ func (c *userClaimsFile) Claims(userInfo model.UserInfo) (jwt.Claims, error) {
 		if match(userInfo, entry) {
 			claims := customClaims(userInfo.AsMap())
 			claims.merge(entry.Claims)
-			return claims, nil
+			return jwt.MapClaims(claims), nil
 		}
 	}
 	return userInfo, nil
 }
 
 func match(userInfo model.UserInfo, entry userFileEntry) bool {
-	if entry.Sub != "" && entry.Sub != userInfo.Sub {
+	if entry.Sub != "" && entry.Sub != userInfo.Subject {
 		return false
 	}
 	if entry.Domain != "" && entry.Domain != userInfo.Domain {

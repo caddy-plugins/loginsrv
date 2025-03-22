@@ -1,11 +1,13 @@
 package osiam
 
 import (
-	"github.com/caddy-plugins/loginsrv/model"
-	. "github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/caddy-plugins/loginsrv/model"
+	"github.com/golang-jwt/jwt/v5"
+	. "github.com/stretchr/testify/assert"
 )
 
 func TestBackend_Authenticate(t *testing.T) {
@@ -21,8 +23,10 @@ func TestBackend_Authenticate(t *testing.T) {
 	True(t, authenticated)
 	Equal(t,
 		model.UserInfo{
+			RegisteredClaims: jwt.RegisteredClaims{
+				Subject: `admin`,
+			},
 			Origin: "osiam",
-			Sub:    "admin",
 		},
 		userInfo)
 

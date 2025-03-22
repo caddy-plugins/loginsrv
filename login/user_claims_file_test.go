@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/caddy-plugins/loginsrv/model"
+	"github.com/golang-jwt/jwt/v5"
 	. "github.com/stretchr/testify/assert"
 )
 
@@ -96,19 +97,20 @@ func Test_userClaimsFile_Claims(t *testing.T) {
 	NoError(t, err)
 
 	// Match first entry
-	claims, _ := c.Claims(model.UserInfo{Sub: "bob", Origin: "htpasswd"})
+	claims, _ := c.Claims(model.UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "bob"}, Origin: "htpasswd"})
 	Equal(t, customClaims{"sub": "bob", "origin": "htpasswd", "role": "superAdmin"}, claims)
 
 	// Match second entry
-	claims, _ = c.Claims(model.UserInfo{Sub: "any", Email: "admin@example.org", Origin: "google"})
+	claims, _ = c.Claims(model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "any"}, Email: "admin@example.org", Origin: "google"})
 	Equal(t, customClaims{"sub": "overwrittenSubject", "email": "admin@example.org", "origin": "google", "role": "admin", "projects": []interface{}{"example"}}, claims)
 
 	// Match fourth entry
-	claims, _ = c.Claims(model.UserInfo{Sub: "any", Groups: []string{"example/subgroup", "othergroup"}, Origin: "gitlab"})
+	claims, _ = c.Claims(model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "any"}, Groups: []string{"example/subgroup", "othergroup"}, Origin: "gitlab"})
 	Equal(t, customClaims{"sub": "any", "groups": []string{"example/subgroup", "othergroup"}, "origin": "gitlab", "role": "admin"}, claims)
 
 	// default case with no rules
-	claims, _ = c.Claims(model.UserInfo{Sub: "bob"})
+	claims, _ = c.Claims(model.UserInfo{RegisteredClaims: jwt.RegisteredClaims{Subject: "bob"}})
 	Equal(t, customClaims{"sub": "bob", "role": "unknown"}, claims)
 }
 
@@ -126,13 +128,17 @@ func Test_userClaimsFile_NoMatch(t *testing.T) {
 	NoError(t, err)
 
 	// No Match -> not Modified
-	claims, err := c.Claims(model.UserInfo{Sub: "foo"})
+	claims, err := c.Claims(model.UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "foo"}})
 	NoError(t, err)
-	Equal(t, model.UserInfo{Sub: "foo"}, claims)
+	Equal(t, model.UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "foo"}}, claims)
 
-	claims, err = c.Claims(model.UserInfo{Sub: "bob", Groups: []string{"group"}})
+	claims, err = c.Claims(model.UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "bob"}, Groups: []string{"group"}})
 	NoError(t, err)
-	Equal(t, model.UserInfo{Sub: "bob", Groups: []string{"group"}}, claims)
+	Equal(t, model.UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "bob"}, Groups: []string{"group"}}, claims)
 }
 
 func createClaimsFile(claims string) (string, func()) {

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/caddy-plugins/loginsrv/model"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +20,9 @@ const (
 )
 
 var aUserInfo = model.UserInfo{
-	Sub:    "test@example.com",
+	RegisteredClaims: jwt.RegisteredClaims{
+		Subject: "test@example.com",
+	},
 	Origin: "origin",
 	Domain: "example.com",
 }
@@ -47,7 +50,9 @@ func Test_userClaimsProvider_Claims(t *testing.T) {
 	require.NoError(t, err)
 
 	claims, err := provider.Claims(model.UserInfo{
-		Sub:    "test@example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: "test@example.com",
+		},
 		Origin: "origin",
 		Domain: "example.com",
 	})
@@ -91,7 +96,9 @@ func Test_userClaimsProvider_Claims_NotFound(t *testing.T) {
 	require.NoError(t, err)
 
 	claims, err := provider.Claims(model.UserInfo{
-		Sub:    "test@example.com",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: "test@example.com",
+		},
 		Origin: "origin",
 		Domain: "example.com",
 	})

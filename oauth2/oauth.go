@@ -10,6 +10,7 @@ import (
 	"github.com/admpub/goth"
 	"github.com/admpub/goth/gothic"
 	"github.com/caddy-plugins/loginsrv/model"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Config describes a typical 3-legged OAuth2 flow, with both the
@@ -109,8 +110,10 @@ func Authenticate(cfg *Config, w http.ResponseWriter, r *http.Request) (model.Us
 		return model.UserInfo{}, err
 	}
 	return model.UserInfo{
-		ID:      user.UserID,
-		Sub:     user.Name,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: user.Name,
+			ID:      user.UserID,
+		},
 		Picture: user.AvatarURL,
 		Name:    user.Name,
 		Email:   user.Email,

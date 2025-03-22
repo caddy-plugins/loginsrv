@@ -9,7 +9,7 @@ import (
 	"github.com/admpub/caddy/caddyhttp/httpserver"
 	"github.com/caddy-plugins/loginsrv/login"
 	"github.com/caddy-plugins/loginsrv/model"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Tests a page while being logged in as a user (doesn't test that the {user} replacer changes)
@@ -48,7 +48,12 @@ func Test_ServeHTTP_200(t *testing.T) {
 	}
 
 	//Set user token
-	userInfo := model.UserInfo{Sub: "bob", Expiry: time.Now().Add(time.Second).Unix()}
+	userInfo := model.UserInfo{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   "bob",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second)),
+		},
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, userInfo)
 	validToken, err := token.SignedString([]byte(h.config.JwtSecret))
 	if err != nil {
