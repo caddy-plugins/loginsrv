@@ -1,4 +1,4 @@
-package gitea
+package wechat
 
 import (
 	"github.com/admpub/goth"

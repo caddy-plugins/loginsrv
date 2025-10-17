@@ -1,4 +1,4 @@
-package gitea
+package paypal
 
 import (
 	"github.com/admpub/goth"

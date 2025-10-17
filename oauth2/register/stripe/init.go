@@ -1,4 +1,4 @@
-package gitea
+package stripe
 
 import (
 	"github.com/admpub/goth"

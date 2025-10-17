@@ -1,4 +1,4 @@
-package gitea
+package bitbucket
 
 import (
 	"github.com/admpub/goth"

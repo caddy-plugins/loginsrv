@@ -1,4 +1,4 @@
-package gitea
+package yahoo
 
 import (
 	"github.com/admpub/goth"

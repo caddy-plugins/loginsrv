@@ -1,4 +1,4 @@
-package gitea
+package github
 
 import (
 	"github.com/admpub/goth"

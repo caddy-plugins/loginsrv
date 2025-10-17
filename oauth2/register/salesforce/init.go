@@ -1,4 +1,4 @@
-package gitea
+package salesforce
 
 import (
 	"github.com/admpub/goth"
