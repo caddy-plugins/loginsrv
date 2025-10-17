@@ -1,11 +1,14 @@
 package login
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
@@ -87,6 +90,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	query := r.URL.Query()
+	assets := query.Get(queryVarName)
+	if len(assets) > 0 {
+		h.handleAssets(w, r, assets)
+		return
+	}
+
 	h.setRedirectCookie(w, r)
 
 	_, err := h.oauth.GetConfigFromRequest(r) // 先尝试用oauth认证
@@ -96,6 +106,32 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.handleLogin(w, r) // 然后再依次尝试其它后台认证
+}
+
+var urlArgInCss = regexp.MustCompile(`\?[^"')]+(["']?\))`)
+
+func (h *Handler) handleAssets(w http.ResponseWriter, r *http.Request, assets string) {
+	file := path.Join(`assets`, assets)
+	f, err := assetsFS.Open(file)
+	if err != nil {
+		if os.IsNotExist(err) {
+			h.respondNotFound(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+	w.Header().Set(`Content-Type`, `text/css`)
+	w.WriteHeader(http.StatusOK)
+	if strings.HasPrefix(assets, `font-`) {
+		b, _ := io.ReadAll(f)
+		b = urlArgInCss.ReplaceAll(b, []byte(`$1`))
+		b = bytes.ReplaceAll(b, []byte(`url('`), []byte(`url('?`+queryVarName+`=`))
+		w.Write(b)
+	} else {
+		io.Copy(w, f)
+	}
 }
 
 func (h *Handler) handleOauth(w http.ResponseWriter, r *http.Request) {

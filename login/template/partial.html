@@ -1,8 +1,25 @@
 {{- define "styles" -}}
-<!-- <link uic-remove rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
-<link uic-remove rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{{- if .CSSFiles.FontAwesome -}}
+<link rel="stylesheet" href="{{.CSSFiles.FontAwesome}}" />
+{{- else if not .Styles.FontAwesome -}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+{{- end -}}
+{{- if .CSSFiles.Bootstrap -}}
+<link rel="stylesheet" href="{{.CSSFiles.Bootstrap}}" />
+{{- end -}}
+{{- if .CSSFiles.BSSocial -}}
+<link rel="stylesheet" href="{{.CSSFiles.BSSocial}}" />
+{{- end -}}
 <style>
-{{- .Styles.CSS -}}
+{{- if not .CSSFiles.Bootstrap -}}
+{{- .Styles.Bootstrap | toCSS -}}
+{{- end -}}
+{{- if not .CSSFiles.BSSocial -}}
+{{- .Styles.BSSocial | toCSS -}}
+{{- end -}}
+{{- if not .CSSFiles.FontAwesome -}}
+{{- .Styles.FontAwesome | toCSS -}}
+{{- end -}}
 .vertical-offset-100{padding-top:100px;}
 .login-or-container {text-align: center;margin: 0;margin-bottom: 10px;clear: both;color: #6a737c;font-variant: small-caps;}
 .login-or-hr {margin-bottom: 0;position: relative;top: 28px;height: 0;border: 0;border-top: 1px solid #e4e6e8;}
@@ -10,7 +27,7 @@
 .login-picture {height: 120px;border-radius: 3px;margin-bottom: 10px;box-shadow: 0 0 5px #ccc;}
 @media (prefers-color-scheme: dark) {
 body,.login-or{background-color:#111;}.login-or-hr{border-color:#444}body{color:#aaa}
-.panel-default{border-color:#333}.panel{background-color:#333}..login-or-container{color:#888}
+.panel-default{border-color:#333}.panel{background-color:#333}.login-or-container{color:#888}
 .panel-default>.panel-heading{color: #fff;background-color: #555;border-color: #333;}
 .form-control{background-color: #000;border-color:#333;color:#f1f1f1}
 }</style>

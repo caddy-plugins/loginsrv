@@ -19,6 +19,7 @@ type loginFormData struct {
 	Authenticated bool
 	UserInfo      model.UserInfo
 	Styles        Styles
+	CSSFiles      Styles
 }
 
 type Styles struct {
@@ -27,23 +28,43 @@ type Styles struct {
 	FontAwesome string
 }
 
+func getEnvDefault(k string, dft string) string {
+	v := os.Getenv(k)
+	if len(v) == 0 {
+		v = dft
+	}
+	return v
+}
+
+const queryVarName = `--login-assets--`
+
+var cssFiles = Styles{
+	Bootstrap:   getEnvDefault(`CSS_BOOTSTRAP_URL`, `?`+queryVarName+`=bootstrap.min.css`),
+	BSSocial:    getEnvDefault(`CSS_BOOTSTRAP_SOCIAL__URL`, `?`+queryVarName+`=bootstrap-social.min.css`),
+	FontAwesome: getEnvDefault(`CSS_FONT_AWESOME_URL`, `?`+queryVarName+`=font-awesome.min.css`),
+}
+
+var cssContents = Styles{
+	Bootstrap:   bootstrapCSS,
+	BSSocial:    bsSocialCSS,
+	FontAwesome: fontAwesomeCSS,
+}
+
 func (s Styles) String() string {
 	return s.Bootstrap + s.BSSocial + s.FontAwesome
 }
 
 func (s Styles) CSS() template.CSS {
-	return template.CSS(s.String())
+	return toCSS(s.String())
 }
 
 func writeLoginForm(w http.ResponseWriter, params loginFormData) {
-	params.Styles = Styles{
-		Bootstrap:   bootstrapCSS,
-		BSSocial:    bsSocialCSS,
-		FontAwesome: fontAwesomeCSS,
-	}
+	params.Styles = cssContents
+	params.CSSFiles = cssFiles
 	funcMap := template.FuncMap{
 		"ucfirst":   ucfirst,
 		"trimRight": strings.TrimRight,
+		"toCSS":     toCSS,
 	}
 	templateName := "loginForm"
 	if params.Config != nil && params.Config.Template != "" {
@@ -95,4 +116,8 @@ func ucfirst(in string) string {
 	}
 
 	return strings.ToUpper(in[0:1]) + in[1:]
+}
+
+func toCSS(v string) template.CSS {
+	return template.CSS(v)
 }
