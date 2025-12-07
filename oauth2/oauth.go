@@ -66,6 +66,14 @@ func (cfg *Config) GetProvider() goth.Provider {
 	return provider
 }
 
+func (cfg *Config) GetCustomisedHostURL() string {
+	hostURL := cfg.Extra[`host_url`]
+	if len(hostURL) > 0 {
+		hostURL = strings.TrimSuffix(hostURL, `/`)
+	}
+	return hostURL
+}
+
 func (cfg *Config) InitProvider() error {
 	provider, err := cfg.NewProvider()
 	if err != nil {
