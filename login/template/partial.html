@@ -10,27 +10,7 @@
 {{- if .CSSFiles.BSSocial -}}
 <link rel="stylesheet" href="{{.CSSFiles.BSSocial}}" />
 {{- end -}}
-<style>
-{{- if not .CSSFiles.Bootstrap -}}
-{{- .Styles.Bootstrap | toCSS -}}
-{{- end -}}
-{{- if not .CSSFiles.BSSocial -}}
-{{- .Styles.BSSocial | toCSS -}}
-{{- end -}}
-{{- if not .CSSFiles.FontAwesome -}}
-{{- .Styles.FontAwesome | toCSS -}}
-{{- end -}}
-.vertical-offset-100{padding-top:100px;}
-.login-or-container {text-align: center;margin: 0;margin-bottom: 10px;clear: both;color: #6a737c;font-variant: small-caps;}
-.login-or-hr {margin-bottom: 0;position: relative;top: 28px;height: 0;border: 0;border-top: 1px solid #e4e6e8;}
-.login-or {display: inline-block;position: relative;padding: 10px;background-color: #FFF;}
-.login-picture {height: 120px;border-radius: 3px;margin-bottom: 10px;box-shadow: 0 0 5px #ccc;}
-@media (prefers-color-scheme: dark) {
-body,.login-or{background-color:#111;}.login-or-hr{border-color:#444}body{color:#aaa}
-.panel-default{border-color:#333}.panel{background-color:#333}.login-or-container{color:#888}
-.panel-default>.panel-heading{color: #fff;background-color: #555;border-color: #333;}
-.form-control{background-color: #000;border-color:#333;color:#f1f1f1}
-}</style>
+<link rel="stylesheet" href="{{.CSSFiles.Custom}}" />
 {{- end -}}
 
 {{- define "userInfo" -}}
@@ -41,24 +21,28 @@ body,.login-or{background-color:#111;}.login-or-hr{border-color:#444}body{color:
                 {{if .Name}}<h3>{{.Name}}</h3>{{end -}}
               {{- end -}}
               <br/>
-              <a class="btn btn-md btn-primary" href="{{ .Config.LoginPath }}?logout=true">Logout</a>
+              <a class="btn btn-md btn-danger" href="{{ .Config.LoginPath }}?logout=true">Logout</a>
 {{- end -}}
 
 {{- define "login" -}}
+              {{- $oauthLength := len .Config.Oauth -}}
+              {{- $backendLength := len .Config.Backends -}}
+              {{- $onlyOneOAuth := and (eq $oauthLength 1) (eq $backendLength 0) -}}
+
               {{- range $providerName, $opts := .Config.Oauth  -}}
-                <a class="btn btn-block btn-lg btn-social btn-primary btn-{{ $providerName }}" href="{{ trimRight $.Config.LoginPath "/" }}/{{ $providerName }}">
+                <a class="btn btn-block {{- if $onlyOneOAuth}} btn-only-one {{- end}} btn-lg btn-social btn-warning btn-{{ $providerName }}" href="{{ trimRight $.Config.LoginPath `/` }}/{{ $providerName }}">
                   <span class="fa fa-user fa-{{ $providerName }}"></span> Sign in with {{ $providerName | ucfirst }}
                 </a>
               {{- end -}}
-
-              {{- if and (not (eq (len .Config.Backends) 0)) (not (eq (len .Config.Oauth) 0)) -}}
+              
+              {{- if and (gt $backendLength 0) (gt $oauthLength 0) -}}
                 <div class="login-or-container">
                   <hr class="login-or-hr">
                   <div class="login-or lead">or</div>
                 </div>
               {{- end -}}
 
-              {{- if not (eq (len .Config.Backends) 0)  -}}
+              {{- if gt $backendLength 0  -}}
                 <div class="panel panel-default">
   	          <div class="panel-heading">  
   		    <div class="panel-title">

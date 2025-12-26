@@ -18,7 +18,6 @@ type loginFormData struct {
 	Config        *Config
 	Authenticated bool
 	UserInfo      model.UserInfo
-	Styles        Styles
 	CSSFiles      Styles
 }
 
@@ -26,6 +25,7 @@ type Styles struct {
 	Bootstrap   string
 	BSSocial    string
 	FontAwesome string
+	Custom      string
 }
 
 func getEnvDefault(k string, dft string) string {
@@ -42,24 +42,10 @@ var cssFiles = Styles{
 	Bootstrap:   getEnvDefault(`CSS_BOOTSTRAP_URL`, `?`+queryVarName+`=bootstrap.min.css`),
 	BSSocial:    getEnvDefault(`CSS_BOOTSTRAP_SOCIAL__URL`, `?`+queryVarName+`=bootstrap-social.min.css`),
 	FontAwesome: getEnvDefault(`CSS_FONT_AWESOME_URL`, `?`+queryVarName+`=font-awesome.min.css`),
-}
-
-var cssContents = Styles{
-	Bootstrap:   bootstrapCSS,
-	BSSocial:    bsSocialCSS,
-	FontAwesome: fontAwesomeCSS,
-}
-
-func (s Styles) String() string {
-	return s.Bootstrap + s.BSSocial + s.FontAwesome
-}
-
-func (s Styles) CSS() template.CSS {
-	return toCSS(s.String())
+	Custom:      getEnvDefault(`CSS_CUSTOM_URL`, `?`+queryVarName+`=custom.min.css`),
 }
 
 func writeLoginForm(w http.ResponseWriter, params loginFormData) {
-	params.Styles = cssContents
 	params.CSSFiles = cssFiles
 	funcMap := template.FuncMap{
 		"ucfirst":   ucfirst,

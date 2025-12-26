@@ -4,12 +4,6 @@ import (
 	"embed"
 )
 
-var bootstrapCSS string
-
-var bsSocialCSS string
-
-var fontAwesomeCSS string
-
 //go:embed template/partial.html
 var partials string
 
