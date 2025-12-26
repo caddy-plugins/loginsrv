@@ -14,12 +14,12 @@
 {{- end -}}
 
 {{- define "userInfo" -}}
-              {{- with .UserInfo -}}
-                <h1>Welcome {{.Subject}}!</h1>
-                <br/>
-                {{if .Picture}}<img class="login-picture" src="{{.Picture}}?s=120">{{end -}}
-                {{if .Name}}<h3>{{.Name}}</h3>{{end -}}
-              {{- end -}}
+            {{- with .UserInfo -}}
+              <h1>Welcome {{.Subject}}!</h1>
+              <br/>
+              {{if .Picture}}<img class="login-picture" src="{{.Picture}}?s=120">{{end -}}
+              {{if .Name}}<h3>{{.Name}}</h3>{{end -}}
+            {{- end -}}
               <br/>
               <a class="btn btn-md btn-danger" href="{{ .Config.LoginPath }}?logout=true">Logout</a>
 {{- end -}}
@@ -31,7 +31,7 @@
 
               {{- range $providerName, $opts := .Config.Oauth  -}}
                 <a class="btn btn-block {{- if $onlyOneOAuth}} btn-only-one {{- end}} btn-lg btn-social btn-warning btn-{{ $providerName }}" href="{{ trimRight $.Config.LoginPath `/` }}/{{ $providerName }}">
-                  <span class="fa fa-user fa-{{ $providerName }}"></span> Sign in with {{ $providerName | ucfirst }}
+                  <span class="fa {{if $onlyOneOAuth}}fa-sign-in{{else}}fa-user{{end}} fa-{{ $providerName }}"></span> Sign in with {{ $providerName | ucfirst }}
                 </a>
               {{- end -}}
               
