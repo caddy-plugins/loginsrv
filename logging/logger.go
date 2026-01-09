@@ -3,11 +3,13 @@ package logging
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 var Logger *logrus.Logger
@@ -258,10 +260,5 @@ func setCorrelationIds(fields logrus.Fields, h http.Header) {
 }
 
 func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(s, e)
 }
