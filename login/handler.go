@@ -99,13 +99,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.setRedirectCookie(w, r)
 
-	_, err := h.oauth.GetConfigFromRequest(r) // 先尝试用oauth认证
-	if err == nil {
-		h.handleOauth(w, r)
-		return
-	}
-
-	h.handleLogin(w, r) // 然后再依次尝试其它后台认证
+	h.handleLogin(w, r)
 }
 
 var urlArgInCss = regexp.MustCompile(`\?[^"')]+(["']?\))`)
@@ -184,6 +178,12 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 			loginFormData{
 				Config: h.config,
 			})
+		return
+	}
+
+	_, err := h.oauth.GetConfigFromRequest(r) // 先尝试用oauth认证
+	if err == nil {
+		h.handleOauth(w, r)
 		return
 	}
 
