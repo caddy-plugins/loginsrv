@@ -15,6 +15,7 @@
 
 {{- define "userInfo" -}}
             {{- with .UserInfo -}}
+            <div class="text-center">
               <h1>Welcome {{.Subject}}!</h1>
               <br/>
               {{if .Picture}}<img class="login-picture" src="{{.Picture}}?s=120">{{end -}}
@@ -22,6 +23,7 @@
             {{- end -}}
               <br/>
               <a class="btn btn-md btn-danger" href="{{ .Config.LoginPath }}?logout=true">Logout</a>
+            </div>
 {{- end -}}
 
 {{- define "login" -}}
