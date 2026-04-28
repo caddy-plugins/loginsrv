@@ -181,10 +181,12 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.oauth.GetConfigFromRequest(r) // 先尝试用oauth认证
-	if err == nil {
-		h.handleOauth(w, r)
-		return
+	if r.FormValue("profile") != "true" {
+		_, err := h.oauth.GetConfigFromRequest(r) // 先尝试用oauth认证
+		if err == nil {
+			h.handleOauth(w, r)
+			return
+		}
 	}
 
 	if r.Method == "GET" {
