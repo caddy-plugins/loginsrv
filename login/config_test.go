@@ -85,13 +85,13 @@ func TestConfig_ReadConfig(t *testing.T) {
 			},
 		},
 		GracePeriod:         4 * time.Second,
-		UserFile:            "users.yml",
-		UserEndpoint:        "http://test.io/claims",
-		UserEndpointToken:   "token",
-		UserEndpointTimeout: time.Second,
-	}
+			UserFile:            "users.yml",
+			UserEndpoint:        "http://test.io/claims",
+			UserEndpointToken:   "token",
+			UserEndpointTimeout: time.Second,
+		}
 
-	cfg, err := readConfig(flag.NewFlagSet("", flag.ContinueOnError), input)
+		cfg, err := readConfig(flag.NewFlagSet("", flag.ContinueOnError), input)
 	NoError(t, err)
 	Equal(t, expected, cfg)
 }
@@ -212,13 +212,13 @@ func TestConfig_ReadConfigFromEnv(t *testing.T) {
 			},
 		},
 		GracePeriod:         4 * time.Second,
-		UserFile:            "users.yml",
-		UserEndpoint:        "http://test.io/claims",
-		UserEndpointToken:   "token",
-		UserEndpointTimeout: time.Second,
-	}
+			UserFile:            "users.yml",
+			UserEndpoint:        "http://test.io/claims",
+			UserEndpointToken:   "token",
+			UserEndpointTimeout: time.Second,
+		}
 
-	cfg, err := readConfig(flag.NewFlagSet("", flag.ContinueOnError), []string{})
+		cfg, err := readConfig(flag.NewFlagSet("", flag.ContinueOnError), []string{})
 	NoError(t, err)
 	Equal(t, expected, cfg)
 }

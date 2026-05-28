@@ -128,7 +128,7 @@ func (h *Handler) handleAssets(w http.ResponseWriter, r *http.Request, assets st
 	}
 }
 
-func (h *Handler) handleOauth(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleOAuth(w http.ResponseWriter, r *http.Request) {
 	startedFlow, authenticated, userInfo, err := h.oauth.Handle(w, r)
 
 	if startedFlow {
@@ -184,7 +184,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("profile") != "true" {
 		_, err := h.oauth.GetConfigFromRequest(r) // 先尝试用oauth认证
 		if err == nil {
-			h.handleOauth(w, r)
+			h.handleOAuth(w, r)
 			return
 		}
 	}
@@ -193,9 +193,15 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		userInfo, valid := h.GetToken(r)
 		if wantJSON(r) {
 			if valid {
-				w.Header().Set("Content-Type", contentTypeJSON)
-				enc := json.NewEncoder(w)
-				enc.Encode(userInfo) // ignore error of encoding
+				if strings.HasPrefix(r.UserAgent(), `docker/`) {
+					h.respondDockerToken(w, userInfo)
+				} else {
+					w.Header().Set("Content-Type", contentTypeJSON)
+					enc := json.NewEncoder(w)
+					enc.Encode(userInfo) // ignore error of encoding
+				}
+			} else if username, password, hasBasicAuth := r.BasicAuth(); hasBasicAuth && username != "" {
+				h.handleAuthentication(w, r, username, password, true)
 			} else {
 				h.respondAuthFailure(w, r)
 			}
@@ -236,7 +242,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) handleAuthentication(w http.ResponseWriter, r *http.Request, username string, password string) {
+func (h *Handler) handleAuthentication(w http.ResponseWriter, r *http.Request, username string, password string, forDockerAuth ...bool) {
 	authenticated, userInfo, err := h.authenticate(username, password) // 其它后台认证
 	if err != nil {
 		logging.Application(r.Header).WithError(err).Error()
@@ -247,11 +253,24 @@ func (h *Handler) handleAuthentication(w http.ResponseWriter, r *http.Request, u
 	if authenticated {
 		logging.Application(r.Header).
 			WithField("username", username).Info("successfully authenticated")
+
+		if len(forDockerAuth) > 0 && forDockerAuth[0] {
+			h.respondDockerToken(w, userInfo)
+			return
+		}
+
 		h.respondAuthenticated(w, r, userInfo)
 		return
 	}
 	logging.Application(r.Header).
 		WithField("username", username).Info("failed authentication")
+
+	if len(forDockerAuth) > 0 && forDockerAuth[0] {
+		w.Header().Set("Content-Type", contentTypeJSON)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "access denied"})
+		return
+	}
 
 	h.respondAuthFailure(w, r)
 }
@@ -338,13 +357,29 @@ func (h *Handler) createToken(userInfo model.UserInfo) (string, error) {
 	return token.SignedString(key)
 }
 
-func (h *Handler) GetToken(r *http.Request) (userInfo model.UserInfo, valid bool) {
+func (h *Handler) getJWT(r *http.Request) string {
 	c, err := r.Cookie(h.config.CookieName)
 	if err != nil {
+		return ``
+	}
+	if len(c.Value) > 0 {
+		return c.Value
+	}
+	authHeader := r.Header.Get("Authorization")
+	tokenStr, found := strings.CutPrefix(authHeader, "Bearer ")
+	if !found {
+		return ``
+	}
+	return tokenStr
+}
+
+func (h *Handler) GetToken(r *http.Request) (userInfo model.UserInfo, valid bool) {
+	tokenStr := h.getJWT(r)
+	if len(tokenStr) == 0 {
 		return model.UserInfo{}, false
 	}
 
-	token, err := jwt.ParseWithClaims(c.Value, &model.UserInfo{}, func(*jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &model.UserInfo{}, func(*jwt.Token) (interface{}, error) {
 		_, _, verifyKey, err := h.signingInfo()
 		return verifyKey, err
 	})
@@ -397,6 +432,39 @@ func (h *Handler) signingInfo() (signingMethod jwt.SigningMethod, key, verifyKey
 		}
 	}
 	return h.signingMethod, h.signingKey, h.signingVerifyKey, nil
+}
+
+// dockerTokenResponse is the JSON response format expected by Docker Registry v2 clients.
+type dockerTokenResponse struct {
+	Token       string `json:"token"`
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
+	IssuedAt    string `json:"issued_at"`
+}
+
+// respondDockerToken returns a Docker Registry v2 compatible JSON token response.
+func (h *Handler) respondDockerToken(w http.ResponseWriter, userInfo model.UserInfo) {
+	userInfo.ExpiresAt = jwt.NewNumericDate(time.Now().Add(h.config.JwtExpiry))
+	token, err := h.createToken(userInfo)
+	if err != nil {
+		logging.Application(nil).WithError(err).Error()
+		w.Header().Set("Content-Type", contentTypeJSON)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "token signing failed"})
+		return
+	}
+
+	now := time.Now()
+	resp := dockerTokenResponse{
+		Token:       token,
+		AccessToken: token,
+		ExpiresIn:   int(h.config.JwtExpiry.Seconds()),
+		IssuedAt:    now.UTC().Format(time.RFC3339Nano),
+	}
+
+	w.Header().Set("Content-Type", contentTypeJSON)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *Handler) respondError(w http.ResponseWriter, r *http.Request, reason ...string) {
@@ -459,7 +527,6 @@ func (h *Handler) respondAuthFailure(w http.ResponseWriter, r *http.Request, rea
 		w.WriteHeader(403)
 		fmt.Fprintf(w, "Wrong credentials")
 	}
-
 }
 
 func wantHTML(r *http.Request) bool {

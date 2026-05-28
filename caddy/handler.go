@@ -2,6 +2,7 @@ package caddy
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -18,17 +19,20 @@ type CaddyHandler struct {
 
 // NewCaddyHandler create the handler
 func NewCaddyHandler(next httpserver.Handler, loginHandler *login.Handler, config *login.Config) *CaddyHandler {
-	h := &CaddyHandler{
+	return &CaddyHandler{
 		next:         next,
 		config:       config,
 		loginHandler: loginHandler,
 	}
-	return h
 }
 
 func (h *CaddyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, error) {
-	//Fetch jwt token. If valid set a Caddy replacer for {user}
+	isLoginPath := strings.HasPrefix(r.URL.Path, h.config.LoginPath)
+	// Fetch jwt token. If valid set a Caddy replacer for {user}
 	userInfo, valid := h.loginHandler.GetToken(r)
+	if !valid && !isLoginPath && strings.HasPrefix(r.UserAgent(), "docker/") { // Auth gate: Docker requests require JWT
+		return h.dockerAuthResponse(w, r)
+	}
 	if valid {
 		// let upstream middleware (e.g. fastcgi and cgi) know about authenticated
 		// user; this replaces the request with a wrapped instance
@@ -40,10 +44,26 @@ func (h *CaddyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) (int, e
 		repl.Set("user", userInfo.Subject)
 	}
 
-	if strings.HasPrefix(r.URL.Path, h.config.LoginPath) {
+	if isLoginPath {
 		h.loginHandler.ServeHTTP(w, r)
 		return 0, nil
 	}
 
 	return h.next.ServeHTTP(w, r)
+}
+
+func (h *CaddyHandler) dockerAuthResponse(w http.ResponseWriter, r *http.Request) (int, error) {
+	// Advertise the token endpoint to Docker clients via Www-Authenticate header
+	realm := h.config.LoginPath
+	service := r.URL.Query().Get("service")
+	if len(service) == 0 {
+		service = r.Host
+	}
+	scope := r.URL.Query().Get("scope")
+	authHeader := fmt.Sprintf(`Bearer realm=%q,service=%q`, realm, service)
+	if len(scope) > 0 {
+		authHeader += fmt.Sprintf(`,scope=%q`, scope)
+	}
+	w.Header().Set("Www-Authenticate", authHeader)
+	return http.StatusUnauthorized, nil
 }
